@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Triggers</string>
+
+    <string name="start_triggers">Start Triggers</string>
+    <string name="stop_triggers">Stop Triggers</string>
+
+    <string name="first_trigger">First Trigger</string>
+    <string name="placeholder">Stuff here!</string>
+</resources>
