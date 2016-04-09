@@ -104,14 +104,10 @@ public class Extension {
      * Notifications
      *****/
 
-    /**
-     * Source: http://developer.android.com/training/notify-user/build-notification.html
-     * @param context
-     */
-    public static void sendNotification(final Context context, String title, String message) {
+    public static void sendNotification(final Context context, String title, String message, int icon) {
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(context)
-                        .setSmallIcon(R.drawable.ic_sentiment_very_satisfied_black_24dp)
+                        .setSmallIcon(icon)
                         .setContentTitle(title)
                         .setContentText(message);
 
@@ -127,5 +123,14 @@ public class Extension {
                 (NotificationManager) context.getSystemService(context.NOTIFICATION_SERVICE);
         // Builds the notification and issues it.
         notificationManager.notify(notificationId, builder.build());
+    }
+
+    /**
+     * Source: http://developer.android.com/training/notify-user/build-notification.html
+     *
+     * @param context
+     */
+    public static void sendNotification(final Context context, String title, String message) {
+        sendNotification(context, title, message, R.drawable.ic_sentiment_very_satisfied_black_24dp);
     }
 }

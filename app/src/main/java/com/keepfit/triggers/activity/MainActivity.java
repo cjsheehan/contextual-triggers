@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private void initializeTriggerSettings() {
         LinearLayout container = (LinearLayout) findViewById(R.id.container_triggers);
 
+        // Only create the threads on the first time the application is created, and not if the user is coming from a notification
         if (!fromNotification) {
             // Add new trigger threads here
             TriggerService.addThread(new TimeThread(this));
