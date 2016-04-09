@@ -2,14 +2,22 @@ package com.keepfit.triggers.thread;
 
 import android.app.Activity;
 import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 
 /**
  * Created by Edward on 4/8/2016.
  */
-public class StepCounterThread extends TriggerThread {
+public class StepCounterThread extends TriggerThread implements SensorEventListener{
     private static final String TAG = "StepCounterThread";
     private static final String TITLE = "Step Counter";
-    private static int num;
+
+    private SensorManager mSensorManager;
+    private Sensor mStepCounterSensor;
+    private double steps;
+
 
     public StepCounterThread() {
         super(TITLE, false);
@@ -25,8 +33,8 @@ public class StepCounterThread extends TriggerThread {
             @Override
             public void run() {
                 if (isRunning()) {
-                    txtDisplay.setText(String.valueOf(num++));
-                    if (num == 20) {
+                    txtDisplay.setText(String.valueOf(steps));
+                    if (steps == 2000) {
                         sendNotification();
                     }
                 }
@@ -36,7 +44,12 @@ public class StepCounterThread extends TriggerThread {
 
     @Override
     public void doStartAction() {
-        num = 0;
+        mSensorManager =  (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        mStepCounterSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+
+        mSensorManager.registerListener(this, mStepCounterSensor,
+                SensorManager.SENSOR_DELAY_FASTEST);
+
     }
 
     @Override
@@ -52,5 +65,18 @@ public class StepCounterThread extends TriggerThread {
     @Override
     protected String getMessage() {
         return String.format("You reached the goal for the step counter!");
+    }
+
+
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+//            count.setText(String.valueOf(event.values[0]));
+        steps = event.values[0];
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
     }
 }
