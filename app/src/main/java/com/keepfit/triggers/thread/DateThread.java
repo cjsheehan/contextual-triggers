@@ -82,7 +82,7 @@ public class DateThread extends TriggerThread {
             cursor.moveToNext();
 
         }
-
+s
 //        for(int i = 0; i < events.size(); i++) {
 //            Log.d("Name Of Event", events.get(i).getName());
 //            Log.d("Start Time", events.get(i).getStart());

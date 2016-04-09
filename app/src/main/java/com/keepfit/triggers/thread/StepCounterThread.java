@@ -2,10 +2,16 @@ package com.keepfit.triggers.thread;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.preference.PreferenceManager;
+
+import com.keepfit.triggers.utils.Broadcast;
+
+import java.util.Date;
 
 /**
  * Created by Edward on 4/8/2016.
@@ -13,10 +19,11 @@ import android.hardware.SensorManager;
 public class StepCounterThread extends TriggerThread implements SensorEventListener{
     private static final String TAG = "StepCounterThread";
     private static final String TITLE = "Step Counter";
-
     private SensorManager mSensorManager;
     private Sensor mStepCounterSensor;
+    private SharedPreferences prefs;
     private double steps;
+    double dailyGoal;
 
     public StepCounterThread(Context context) {
         super(TITLE, false, context);
@@ -28,8 +35,12 @@ public class StepCounterThread extends TriggerThread implements SensorEventListe
             @Override
             public void run() {
                 if (isRunning()) {
+
+                    dailyGoal = Double.parseDouble(prefs.getString("step_length", "1000"));
+
                     txtDisplay.setText(String.valueOf(steps));
-                    if (steps == 2000) {
+                    if (steps >= dailyGoal) {
+                        Broadcast.broadcastStepCompleteness(context, 100);
                         sendNotification();
                     }
                 }
@@ -44,6 +55,8 @@ public class StepCounterThread extends TriggerThread implements SensorEventListe
 
         mSensorManager.registerListener(this, mStepCounterSensor,
                 SensorManager.SENSOR_DELAY_FASTEST);
+
+        prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
     }
 
