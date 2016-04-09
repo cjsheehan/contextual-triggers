@@ -2,6 +2,7 @@ package com.keepfit.triggers;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
@@ -25,6 +26,7 @@ public class TriggerService extends Service {
     private static AlgorithmBaseThread thread;
     private static List<TriggerThread> threads;
     private static boolean running;
+    private static Context context;
 
     @Override
     public void onCreate() {
@@ -36,7 +38,7 @@ public class TriggerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand!");
 
-        thread.startThread();
+        thread.startThread(context);
         running = true;
 
         return START_NOT_STICKY;
@@ -75,6 +77,10 @@ public class TriggerService extends Service {
         return running;
     }
 
+    public static void setContext(Context mainContext){
+        context = mainContext;
+    }
+
     final class AlgorithmBaseThread extends BaseThread {
 
         public AlgorithmBaseThread() {
@@ -92,7 +98,7 @@ public class TriggerService extends Service {
         public void doStartAction() {
             Log.d(TAG, "STARTING THREAD!");
             for (TriggerThread thread : threads) {
-                thread.startThread();
+                thread.startThread(context);
             }
         }
 
