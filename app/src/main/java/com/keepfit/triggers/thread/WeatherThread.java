@@ -11,12 +11,8 @@ public class WeatherThread extends TriggerThread {
     private static final String TITLE = "Weather";
     private static int num;
 
-    public WeatherThread() {
-        super(TITLE, false);
-    }
-
     public WeatherThread(Context context) {
-        super(context, TITLE, false);
+        super(TITLE, false, context);
     }
 
     @Override

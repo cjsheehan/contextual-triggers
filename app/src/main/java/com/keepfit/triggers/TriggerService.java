@@ -2,16 +2,15 @@ package com.keepfit.triggers;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.keepfit.triggers.thread.BaseThread;
 import com.keepfit.triggers.thread.TriggerThread;
-import com.keepfit.triggers.utils.Extension;
 import com.keepfit.triggers.utils.enums.Action;
 
 import java.util.ArrayList;
@@ -27,18 +26,20 @@ public class TriggerService extends Service {
     private static List<TriggerThread> threads;
     private static boolean running;
     private static Context context;
+    private TriggerReceiver receiver;
 
     @Override
     public void onCreate() {
         Log.d(TAG, "onCreate!");
         thread = new AlgorithmBaseThread();
+        registerReceivers();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand!");
 
-        thread.startThread(context);
+        thread.startThread();
         running = true;
 
         return START_NOT_STICKY;
@@ -48,6 +49,7 @@ public class TriggerService extends Service {
     public void onDestroy() {
         Log.d(TAG, "onDestroy");
         stop();
+        unregisterReceiver(receiver);
         stopSelf();
     }
 
@@ -61,6 +63,13 @@ public class TriggerService extends Service {
         thread.stopThread();
         thread = null;
         running = false;
+    }
+
+    private void registerReceivers() {
+        receiver = new TriggerReceiver();
+        for (Action action : Action.values()) {
+            registerReceiver(receiver, new IntentFilter(action.title));
+        }
     }
 
     public static void addThread(TriggerThread thread) {
@@ -98,7 +107,7 @@ public class TriggerService extends Service {
         public void doStartAction() {
             Log.d(TAG, "STARTING THREAD!");
             for (TriggerThread thread : threads) {
-                thread.startThread(context);
+                thread.startThread();
             }
         }
 
@@ -129,6 +138,7 @@ public class TriggerService extends Service {
     }
 
     private void handleTimeReceived() {
+
     }
 
     private void handleWeatherReceived() {

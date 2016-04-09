@@ -41,7 +41,7 @@ public class DateThread extends TriggerThread {
     }
 
     public DateThread(Context context) {
-        super(context, TITLE, false);
+        super(TITLE, false, context);
     }
 
     @Override

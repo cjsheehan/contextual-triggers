@@ -24,7 +24,7 @@ public interface IThread {
     /**
      * Starts the thread and runs the start action.
      */
-    void startThread(Context newContext);
+    void startThread();
 
     /**
      * Stops the thread and runs the stop action.

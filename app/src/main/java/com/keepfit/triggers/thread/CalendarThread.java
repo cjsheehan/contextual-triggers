@@ -20,12 +20,8 @@ public class CalendarThread extends TriggerThread {
     private static final String TITLE = "Calendar";
     private static int num;
 
-    public CalendarThread() {
-        super(TITLE, false);
-    }
-
     public CalendarThread(Context context) {
-        super(context, TITLE, false);
+        super(TITLE, false, context);
     }
 
     @Override
