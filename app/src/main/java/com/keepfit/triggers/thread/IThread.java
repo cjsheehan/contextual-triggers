@@ -1,5 +1,7 @@
 package com.keepfit.triggers.thread;
 
+import android.content.Context;
+
 /**
  * Created by Edward on 4/8/2016.
  */
@@ -22,7 +24,7 @@ public interface IThread {
     /**
      * Starts the thread and runs the start action.
      */
-    void startThread();
+    void startThread(Context newContext);
 
     /**
      * Stops the thread and runs the stop action.

@@ -1,5 +1,6 @@
 package com.keepfit.triggers.thread;
 
+import android.content.Context;
 import android.util.Log;
 
 /**
@@ -9,6 +10,8 @@ public abstract class BaseThread extends Thread implements IThread {
     private static final String TAG = "BaseThread";
 
     private boolean started, running, enabled;
+
+    protected Context context;
 
     public BaseThread(String name) {
         this(name, true);
@@ -49,12 +52,13 @@ public abstract class BaseThread extends Thread implements IThread {
      * Starts the thread and runs the abstract start action.
      */
     @Override
-    public void startThread() {
+    public void startThread(Context mainContext) {
         Log.d(TAG, "Starting thread!");
         if (!started)
             start();
         running = enabled;
         doStartAction();
+        context = mainContext;
     }
 
     /**

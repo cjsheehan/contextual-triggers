@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
             TriggerService.addThread(new StepCounterThread(this));
             TriggerService.addThread(new WeatherThread(this));
             TriggerService.addThread(new LocationThread(this));
+            TriggerService.setContext(this);
         }
 
         for (TriggerThread thread : TriggerService.getThreads()) {
