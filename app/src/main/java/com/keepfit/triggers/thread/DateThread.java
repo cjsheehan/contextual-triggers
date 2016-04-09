@@ -11,6 +11,9 @@ import android.support.annotation.Keep;
 import android.text.format.DateUtils;
 import android.util.Log;
 
+
+import com.keepfit.triggers.utils.Broadcast;
+
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 
 import java.lang.reflect.Array;
@@ -36,13 +39,11 @@ public class DateThread extends TriggerThread {
     public static ArrayList<String> endDates = new ArrayList<String>();
     public static ArrayList<String> descriptions = new ArrayList<String>();
 
-    public DateThread() {
-        super(TITLE, false);
-    }
-
     public DateThread(Context context) {
         super(TITLE, false, context);
     }
+
+    boolean sent = false;
 
     @Override
     public void doRunAction() {
@@ -60,7 +61,7 @@ public class DateThread extends TriggerThread {
                         Uri.parse("content://com.android.calendar/events"),
                         new String[] { "calendar_id", "title", "description",
                                 "dtstart", "dtend", "eventLocation" }, selection,
-                        null, null);
+                                null, null);
         cursor.moveToFirst();
         String CNames[] = new String[cursor.getCount()];
 
@@ -81,10 +82,22 @@ public class DateThread extends TriggerThread {
             cursor.moveToNext();
 
         }
-        for(int i = 0; i < events.size(); i++) {
-            Log.d("Name Of Event", events.get(i).getName());
-            Log.d("Start Time", events.get(i).getStart());
-            Log.d("End Time", events.get(i).getEnd());
+
+//        for(int i = 0; i < events.size(); i++) {
+//            Log.d("Name Of Event", events.get(i).getName());
+//            Log.d("Start Time", events.get(i).getStart());
+//            Log.d("End Time", events.get(i).getEnd());
+//        }
+        if (!sent) {
+            Broadcast.broadcastCalendarEvents(context, events);
+            sent = true;
+
+            for (int i = 0; i < events.size(); i++) {
+                Log.d("Name Of Event", events.get(i).getName());
+                Log.d("Start Time", events.get(i).getStart());
+                Log.d("End Time", events.get(i).getEnd());
+
+            }
         }
     }
 
