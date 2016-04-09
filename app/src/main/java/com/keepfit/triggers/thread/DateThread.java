@@ -6,9 +6,14 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.provider.CalendarContract;
+import android.support.annotation.Keep;
 import android.text.format.DateUtils;
 import android.util.Log;
 
+import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
+
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -24,6 +29,7 @@ public class DateThread extends TriggerThread {
     private static final String TITLE = "Date";
     private static int num;
 
+    public ArrayList<KeepFitCalendarEvent> events = new ArrayList<>();
 
     public static ArrayList<String> nameOfEvent = new ArrayList<String>();
     public static ArrayList<String> startDates = new ArrayList<String>();
@@ -41,12 +47,19 @@ public class DateThread extends TriggerThread {
     @Override
     public void doRunAction() {
 
+        Calendar startDate = Calendar.getInstance();
+        Calendar endDate = Calendar.getInstance();
+        endDate.add(Calendar.DATE, 2);
+
+        String selection = "(( " + CalendarContract.Events.DTSTART + " >= " + startDate.getTimeInMillis() + " ) AND ( " + CalendarContract.Events.DTSTART + " <= " + endDate.getTimeInMillis() + " ))";
+
+
         Cursor cursor = null;
         cursor = context.getContentResolver()
                 .query(
                         Uri.parse("content://com.android.calendar/events"),
                         new String[] { "calendar_id", "title", "description",
-                                "dtstart", "dtend", "eventLocation" }, null,
+                                "dtstart", "dtend", "eventLocation" }, selection,
                         null, null);
         cursor.moveToFirst();
         String CNames[] = new String[cursor.getCount()];
@@ -58,16 +71,20 @@ public class DateThread extends TriggerThread {
         descriptions.clear();
         for (int i = 0; i < CNames.length; i++) {
 
-            nameOfEvent.add(cursor.getString(1));
-            startDates.add(getDate(Long.parseLong(cursor.getString(3))));
-            endDates.add(getDate(Long.parseLong(cursor.getString(4))));
-            descriptions.add(cursor.getString(2));
-            CNames[i] = cursor.getString(1);
+            String eventName = cursor.getString(1);
+            String startDt = getDate(Long.parseLong(cursor.getString(3)));
+            String endDt = getDate(Long.parseLong(cursor.getString(4)));
+//            descriptions.add(cursor.getString(2));
+//            CNames[i] = cursor.getString(1);
+            KeepFitCalendarEvent newCalendarEvent = new KeepFitCalendarEvent(eventName, startDt, endDt);
+            events.add(newCalendarEvent);
             cursor.moveToNext();
 
         }
-        for(int i = 0; i < nameOfEvent.size(); i++) {
-            Log.d("Name Of Event", nameOfEvent.get(i));
+        for(int i = 0; i < events.size(); i++) {
+            Log.d("Name Of Event", events.get(i).getName());
+            Log.d("Start Time", events.get(i).getStart());
+            Log.d("End Time", events.get(i).getEnd());
         }
     }
 

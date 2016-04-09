@@ -1,6 +1,7 @@
 package com.keepfit.triggers;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,8 +10,9 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.keepfit.triggers.thread.BaseThread;
-import com.keepfit.triggers.thread.IThread;
 import com.keepfit.triggers.thread.TriggerThread;
+import com.keepfit.triggers.utils.Extension;
+import com.keepfit.triggers.utils.enums.Action;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -111,6 +113,49 @@ public class TriggerService extends Service {
         @Override
         public void pauseThread(boolean pause) {
 
+        }
+    }
+
+    private void handleDateReceived() {
+
+    }
+
+    private void handleLocationReceived() {
+
+    }
+
+    private void handleStepCounterReceived() {
+
+    }
+
+    private void handleTimeReceived() {
+    }
+
+    private void handleWeatherReceived() {
+
+    }
+
+    class TriggerReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Action action = Action.getById(intent.getIntExtra("action", 0));
+            switch (action) {
+                case DATE:
+                    handleDateReceived();
+                    break;
+                case LOCATION:
+                    handleLocationReceived();
+                    break;
+                case STEP_COUNTER:
+                    handleStepCounterReceived();
+                    break;
+                case TIME:
+                    handleTimeReceived();
+                    break;
+                case WEATHER:
+                    handleWeatherReceived();
+                    break;
+            }
         }
     }
 

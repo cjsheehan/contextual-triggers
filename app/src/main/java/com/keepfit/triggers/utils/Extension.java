@@ -5,7 +5,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.RippleDrawable;
@@ -87,17 +86,6 @@ public class Extension {
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra("exiting", true);
         activity.startActivity(intent);
-    }
-
-    /*****
-     * Broadcasting
-     *****/
-
-    public static void broadcastAddGoal(Context context) {
-//        Intent intent = new Intent(Action.ADD_GOAL.title);
-//        intent.putExtra("goal", goal);
-//        intent.putExtra("action", Action.ADD_GOAL.id);
-//        context.sendBroadcast(intent);
     }
 
     /*****

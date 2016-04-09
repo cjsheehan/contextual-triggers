@@ -31,7 +31,7 @@ public abstract class BaseThread extends Thread implements IThread {
     public void run() {
         while (running) {
             try {
-                Thread.sleep(300);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

@@ -1,6 +1,5 @@
 package com.keepfit.triggers.thread;
 
-import android.app.Activity;
 import android.content.Context;
 import android.widget.TextView;
 
