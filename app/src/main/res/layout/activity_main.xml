@@ -19,7 +19,8 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:background="@color/GhostWhite"
-        android:paddingTop="20dp">
+        android:paddingTop="20dp"
+        android:weightSum="1">
 
         <Button
             android:layout_width="match_parent"
@@ -29,14 +30,13 @@
             android:layout_marginTop="10dp"
             android:layout_marginRight="10dp"
             android:layout_marginLeft="10dp"
-            android:layout_marginBottom="10dp"/>
+            android:layout_marginBottom="10dp" />
 
-        <com.mcnedward.triggers.view.TriggerSettingView
-            android:id="@+id/setting_first"
+        <LinearLayout
+            android:id="@+id/container_triggers"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            custom:setting_title="@string/first_trigger"
-            custom:setting_trigger_type="first"/>
+            android:orientation="vertical"></LinearLayout>
 
     </LinearLayout>
 
