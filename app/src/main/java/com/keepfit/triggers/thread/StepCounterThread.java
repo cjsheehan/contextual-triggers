@@ -18,13 +18,8 @@ public class StepCounterThread extends TriggerThread implements SensorEventListe
     private Sensor mStepCounterSensor;
     private double steps;
 
-
-    public StepCounterThread() {
-        super(TITLE, false);
-    }
-
     public StepCounterThread(Context context) {
-        super(context, TITLE, false);
+        super(TITLE, false, context);
     }
 
     @Override

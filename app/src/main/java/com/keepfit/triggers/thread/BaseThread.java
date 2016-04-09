@@ -13,15 +13,18 @@ public abstract class BaseThread extends Thread implements IThread {
 
     protected Context context;
 
-    public BaseThread(String name) {
-        this(name, true);
+    public BaseThread(String name) { this(name, true, null); }
+
+    public BaseThread(String name, Context context) {
+        this(name, true, context);
     }
 
-    public BaseThread(String name, boolean enabled) {
+    public BaseThread(String name, boolean enabled, Context context) {
         super(name);
         started = false;
         running = false;
         this.enabled = enabled;
+        this.context = context;
     }
 
     /**
@@ -52,13 +55,12 @@ public abstract class BaseThread extends Thread implements IThread {
      * Starts the thread and runs the abstract start action.
      */
     @Override
-    public void startThread(Context mainContext) {
+    public void startThread() {
         Log.d(TAG, "Starting thread!");
         if (!started)
             start();
         running = enabled;
         doStartAction();
-        context = mainContext;
     }
 
     /**

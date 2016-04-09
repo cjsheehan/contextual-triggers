@@ -5,7 +5,8 @@ import java.io.Serializable;
 /**
  * Created by Dino on 09/04/2016.
  */
-public class KeepFitCalendarEvent implements Serializable{
+public class KeepFitCalendarEvent implements Serializable {
+
     private String eventName;
     private String startTime;
     private String endTime;

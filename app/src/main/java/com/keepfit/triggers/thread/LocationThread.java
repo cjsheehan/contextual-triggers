@@ -11,12 +11,8 @@ public class LocationThread extends TriggerThread {
     private static final String TITLE = "Location";
     private static int num;
 
-    public LocationThread() {
-        super(TITLE, false);
-    }
-
     public LocationThread(Context context) {
-        super(context, TITLE, false);
+        super(TITLE, false, context);
     }
 
     @Override

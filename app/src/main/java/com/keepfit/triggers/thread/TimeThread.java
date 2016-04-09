@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
+import com.keepfit.triggers.utils.Broadcast;
 import com.keepfit.triggers.utils.Dates;
 
 import java.util.Calendar;
@@ -18,13 +19,8 @@ public class TimeThread extends TriggerThread {
     private static int num;
     private TimeInterval[] timeIntervals;
 
-
-    public TimeThread() {
-        super(TITLE, false);
-    }
-
     public TimeThread(Context context) {
-        super(context, TITLE, false);
+        super(TITLE, false, context);
     }
 
     @Override
@@ -38,7 +34,7 @@ public class TimeThread extends TriggerThread {
 
                     TimeInterval interval = checkInterval();
                     if (interval != null) {
-                        sendNotification();
+                        Broadcast.broadcastTimeReached(context, interval.timeStamp);
                     }
                 }
             }

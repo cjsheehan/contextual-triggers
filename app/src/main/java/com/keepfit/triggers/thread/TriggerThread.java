@@ -11,16 +11,10 @@ import com.keepfit.triggers.utils.Extension;
 public abstract class TriggerThread extends BaseThread {
     private static final String TAG = "TriggerThread";
 
-    protected Context context;
     protected TextView txtDisplay;
 
-    public TriggerThread(String name, boolean enabled) {
-        super(name, enabled);
-    }
-
-    public TriggerThread(Context context, String name, boolean enabled) {
-        super(name, enabled);
-        this.context = context;
+    public TriggerThread(String name, boolean enabled, Context context) {
+        super(name, enabled, context);
     }
 
     public void setDisplay(TextView textView) {
