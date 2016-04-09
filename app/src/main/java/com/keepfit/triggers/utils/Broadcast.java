@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.keepfit.triggers.utils.enums.Action;
+import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
+
+import java.util.ArrayList;
 
 /**
  * Created by Edward on 4/9/2016.
@@ -19,6 +22,13 @@ public class Broadcast {
         Intent intent = new Intent(Action.TIME.title);
         intent.putExtra("timeStamp", timeStamp);
         intent.putExtra(ACTION, Action.TIME.id);
+        context.sendBroadcast(intent);
+    }
+
+    public static void broadcastCalendarEvents(Context context, ArrayList<KeepFitCalendarEvent> events) {
+        Intent intent = new Intent(Action.DATE.title);
+        intent.putExtra("events", events);
+        intent.putExtra(ACTION, Action.DATE.id);
         context.sendBroadcast(intent);
     }
 

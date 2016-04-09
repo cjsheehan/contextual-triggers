@@ -13,7 +13,9 @@ import com.keepfit.triggers.thread.BaseThread;
 import com.keepfit.triggers.thread.TriggerThread;
 import com.keepfit.triggers.utils.Extension;
 import com.keepfit.triggers.utils.enums.Action;
+import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -116,7 +118,9 @@ public class TriggerService extends Service {
         }
     }
 
-    private void handleDateReceived() {
+    private void handleDateReceived(Intent intent) {
+       ArrayList<KeepFitCalendarEvent> events = (ArrayList<KeepFitCalendarEvent>) intent.getSerializableExtra("events");
+        Extension.sendNotification(context, "EVENT", events.get(0).getName() + " at " + events.get(0).getStart());
 
     }
 
@@ -141,7 +145,7 @@ public class TriggerService extends Service {
             Action action = Action.getById(intent.getIntExtra("action", 0));
             switch (action) {
                 case DATE:
-                    handleDateReceived();
+                    handleDateReceived(intent);
                     break;
                 case LOCATION:
                     handleLocationReceived();
