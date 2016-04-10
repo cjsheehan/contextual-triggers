@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ContextualTriggers.iml" filepath="$PROJECT_DIR$/ContextualTriggers.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/contextual-triggers-master.iml" filepath="$PROJECT_DIR$/contextual-triggers-master.iml" />
     </modules>
   </component>
 </project>

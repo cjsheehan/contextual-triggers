@@ -142,8 +142,9 @@ public class TriggerService extends Service {
 
     }
 
-    private void handleTimeReceived() {
-
+    private void handleTimeReceived(Intent intent) {
+        String timeStamp = intent.getStringExtra("timeStamp");
+        Extension.sendNotification(context, "TIMESTAMP!", timeStamp);
     }
 
     private void handleWeatherReceived() {
@@ -165,7 +166,7 @@ public class TriggerService extends Service {
                     handleStepCounterReceived();
                     break;
                 case TIME:
-                    handleTimeReceived();
+                    handleTimeReceived(intent);
                     break;
                 case WEATHER:
                     handleWeatherReceived();

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 public class Broadcast {
 
     public static String ACTION = "action";
+
     /*****
      * Broadcasting
      *****/

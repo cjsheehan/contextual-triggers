@@ -62,9 +62,9 @@ public class TimeThread extends TriggerThread {
         timeIntervals = new TimeInterval[] {
                 new TimeInterval("09:00:00"),
                 new TimeInterval("12:00:00"),
+                new TimeInterval("15:00:00"),
                 new TimeInterval("17:00:00"),
-                new TimeInterval("20:00:00"),
-                new TimeInterval("15:54:50")
+                new TimeInterval("20:00:00")
         };
     }
 
