@@ -3,16 +3,18 @@ package com.keepfit.triggers.thread;
 import android.app.Activity;
 import android.content.Context;
 
+import com.keepfit.triggers.utils.enums.TriggerType;
+
 /**
  * Created by Edward on 4/8/2016.
  */
-public class WeatherThread extends TriggerThread {
+public class WeatherThread extends TriggerThread<String> {
     private static final String TAG = "WeatherThread";
     private static final String TITLE = "Weather";
     private static int num;
 
     public WeatherThread(Context context) {
-        super(TITLE, false, context);
+        super(TITLE, TriggerType.WEATHER, false, context);
     }
 
     @Override
@@ -38,6 +40,11 @@ public class WeatherThread extends TriggerThread {
     @Override
     public void doStopAction() {
 
+    }
+
+    @Override
+    public String getTriggerObject() {
+        return "Nothing.";
     }
 
     @Override

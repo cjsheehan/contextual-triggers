@@ -10,12 +10,14 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.keepfit.triggers.thread.BaseThread;
+import com.keepfit.triggers.thread.DateThread;
+import com.keepfit.triggers.thread.TimeThread;
 import com.keepfit.triggers.thread.TriggerThread;
+import com.keepfit.triggers.utils.Broadcast;
 import com.keepfit.triggers.utils.Extension;
-import com.keepfit.triggers.utils.enums.Action;
+import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,8 +72,8 @@ public class TriggerService extends Service {
 
     private void registerReceivers() {
         receiver = new TriggerReceiver();
-        for (Action action : Action.values()) {
-            registerReceiver(receiver, new IntentFilter(action.title));
+        for (TriggerType triggerType : TriggerType.values()) {
+            registerReceiver(receiver, new IntentFilter(triggerType.title));
         }
     }
 
@@ -89,7 +91,7 @@ public class TriggerService extends Service {
         return running;
     }
 
-    public static void setContext(Context mainContext){
+    public static void setContext(Context mainContext) {
         context = mainContext;
     }
 
@@ -128,10 +130,21 @@ public class TriggerService extends Service {
         }
     }
 
-    private void handleDateReceived(Intent intent) {
-       ArrayList<KeepFitCalendarEvent> events = (ArrayList<KeepFitCalendarEvent>) intent.getSerializableExtra("events");
-        Extension.sendNotification(context, "EVENT", events.get(0).getName() + " at " + events.get(0).getStart());
+    private TriggerThread getTrigger(TriggerType triggerType) {
+        TriggerThread thread = null;
+        for (TriggerThread t : threads) {
+            if (t.getTriggerType().equals(triggerType)) {
+                thread = t;
+                break;
+            }
+        }
+        return thread;
+    }
 
+    private void handleDateReceived(Intent intent) {
+        ArrayList<KeepFitCalendarEvent> events = (ArrayList<KeepFitCalendarEvent>) intent.getSerializableExtra("events");
+        if (events.isEmpty()) return;
+        Extension.sendNotification(context, "EVENT", events.get(0).getName() + " at " + events.get(0).getStart());
     }
 
     private void handleLocationReceived() {
@@ -144,7 +157,10 @@ public class TriggerService extends Service {
 
     private void handleTimeReceived(Intent intent) {
         String timeStamp = intent.getStringExtra("timeStamp");
-        Extension.sendNotification(context, "TIMESTAMP!", timeStamp);
+
+        DateThread dateThread = (DateThread) getTrigger(TriggerType.CALENDAR);
+
+        Extension.sendNotification(context, "TIMESTAMP!", timeStamp + " Events: " + dateThread.getTriggerObject().size());
     }
 
     private void handleWeatherReceived() {
@@ -154,9 +170,9 @@ public class TriggerService extends Service {
     class TriggerReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Action action = Action.getById(intent.getIntExtra("action", 0));
-            switch (action) {
-                case DATE:
+            TriggerType triggerType = TriggerType.getById(intent.getIntExtra(Broadcast.ACTION, 0));
+            switch (triggerType) {
+                case CALENDAR:
                     handleDateReceived(intent);
                     break;
                 case LOCATION:

@@ -64,7 +64,7 @@ public class Extension {
             @Override
             public void run() {
 //                Intent intent = new Intent(activity, AddGoalPopup.class);
-//                activity.startActivityForResult(intent, Action.ADD_GOAL_POPUP.id);
+//                activity.startActivityForResult(intent, TriggerType.ADD_GOAL_POPUP.id);
             }
         }, 300);
     }

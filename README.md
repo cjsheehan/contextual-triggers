@@ -7,7 +7,7 @@ To have a Trigger run in the background service, it needs to be defined in a **T
 * void doStopAction()
 * void doRunAction()
 
-The most important step is the **run** action. This will define the action that should occur for every step of the thread. The individual Trigger code should go here. This is an example of a Trigger that will increment a number until it reaches 20, then send a notification to the user:
+The most important step is the **run** triggerType. This will define the triggerType that should occur for every step of the thread. The individual Trigger code should go here. This is an example of a Trigger that will increment a number until it reaches 20, then send a notification to the user:
 ```
 int number = 0;
 @Override
@@ -38,3 +38,11 @@ Once you have created a new **TriggerThread**, you can add it as a setting in th
 ```TriggerService.addThread(new NameOfYourTriggerThreadHere(this));```
 
 A new setting will be added for your Trigger automatically, with the thread being wired to the background **TriggerService**.
+
+### Querying a Trigger From the TriggerService
+After a trigger has been hit and the **TriggerService** has been notified of this and is ready to handle the trigger, the **TriggerService** can communicate with other **TriggerThread**s in order to receive their data at the current time. Each **TriggerThread** must define the type of their trigger object as a generic type when extending **TriggerThread**, as well as implementing a method called *getTriggerObject()* that returns the data for that thread. With this complete, you can query the **TriggerThread** in the **TriggerService**. You must first get the thread that you want to query through the *getTrigger(TriggerType)* method. You will have to cast the result of this method to the type of **TriggerThread** that you want, and once you have that, you can call the *getTriggerObject()* method to get the data from the **TriggerThread**. Here is an example of querying the data from the **StepCounterThread**:
+
+```
+StepCounterThread thread = (StepCounterThread) getTrigger(TriggerType.STEP_COUNTER);
+int stepCount = thread.getTriggerObject();
+```

@@ -3,9 +3,9 @@ package com.keepfit.triggers.utils.enums;
 /**
  * Created by Edward on 4/9/2016.
  */
-public enum Action {
+public enum TriggerType {
 
-    DATE(1, "Date"),
+    CALENDAR(1, "Date"),
     LOCATION(2, "Location"),
     STEP_COUNTER(3, "Step Counter"),
     TIME(4, "Time"),
@@ -14,15 +14,15 @@ public enum Action {
     public int id;
     public String title;
 
-    Action(int id, String title) {
+    TriggerType(int id, String title) {
         this.id = id;
         this.title = title;
     }
 
-    public static Action getById(int id) {
-        for (Action action : Action.values())
-            if (id == action.id)
-                return action;
+    public static TriggerType getById(int id) {
+        for (TriggerType triggerType : TriggerType.values())
+            if (id == triggerType.id)
+                return triggerType;
         return null;
     }
 }

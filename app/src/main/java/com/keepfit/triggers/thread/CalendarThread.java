@@ -1,6 +1,5 @@
 package com.keepfit.triggers.thread;
 
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
@@ -8,20 +7,24 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.text.format.DateUtils;
 
+import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
+import com.keepfit.triggers.utils.enums.TriggerType;
+
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
  * Created by Dino on 09/04/2016.
  */
-public class CalendarThread extends TriggerThread {
+public class CalendarThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     private static final String TAG = "CalendarThread";
     private static final String TITLE = "Calendar";
     private static int num;
 
     public CalendarThread(Context context) {
-        super(TITLE, false, context);
+        super(TITLE, TriggerType.CALENDAR, false, context);
     }
 
     @Override
@@ -228,6 +231,11 @@ public class CalendarThread extends TriggerThread {
     @Override
     public void doStopAction() {
 
+    }
+
+    @Override
+    public List<KeepFitCalendarEvent> getTriggerObject() {
+        return null;
     }
 
     @Override

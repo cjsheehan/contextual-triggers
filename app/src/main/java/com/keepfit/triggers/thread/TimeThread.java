@@ -6,21 +6,22 @@ import android.util.Log;
 
 import com.keepfit.triggers.utils.Broadcast;
 import com.keepfit.triggers.utils.Dates;
+import com.keepfit.triggers.utils.enums.TriggerType;
 
 import java.util.Calendar;
 
 /**
  * Created by Edward on 4/8/2016.
  */
-public class TimeThread extends TriggerThread {
+public class TimeThread extends TriggerThread<String> {
     private static final String TAG = "TimeThread";
     private static final String TITLE = "Time";
 
-    private static int num;
+    String currentTime;
     private TimeInterval[] timeIntervals;
 
     public TimeThread(Context context) {
-        super(TITLE, false, context);
+        super(TITLE, TriggerType.TIME, false, context);
     }
 
     @Override
@@ -29,8 +30,8 @@ public class TimeThread extends TriggerThread {
             @Override
             public void run() {
                 if (isRunning()) {
-                    String time = Dates.getTime();
-                    txtDisplay.setText(time);
+                    currentTime = Dates.getTime();
+                    txtDisplay.setText(currentTime);
 
                     TimeInterval interval = checkInterval();
                     if (interval != null) {
@@ -39,6 +40,10 @@ public class TimeThread extends TriggerThread {
                 }
             }
         });
+    }
+
+    public String getTriggerObject() {
+        return currentTime;
     }
 
     private TimeInterval checkInterval() {

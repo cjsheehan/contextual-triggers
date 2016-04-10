@@ -10,13 +10,14 @@ import android.hardware.SensorManager;
 import android.preference.PreferenceManager;
 
 import com.keepfit.triggers.utils.Broadcast;
+import com.keepfit.triggers.utils.enums.TriggerType;
 
 import java.util.Date;
 
 /**
  * Created by Edward on 4/8/2016.
  */
-public class StepCounterThread extends TriggerThread implements SensorEventListener{
+public class StepCounterThread extends TriggerThread<Double> implements SensorEventListener{
     private static final String TAG = "StepCounterThread";
     private static final String TITLE = "Step Counter";
     private SensorManager mSensorManager;
@@ -26,7 +27,7 @@ public class StepCounterThread extends TriggerThread implements SensorEventListe
     double dailyGoal;
 
     public StepCounterThread(Context context) {
-        super(TITLE, false, context);
+        super(TITLE, TriggerType.STEP_COUNTER, false, context);
     }
 
     @Override
@@ -63,6 +64,11 @@ public class StepCounterThread extends TriggerThread implements SensorEventListe
     @Override
     public void doStopAction() {
 
+    }
+
+    @Override
+    public Double getTriggerObject() {
+        return steps;
     }
 
     @Override

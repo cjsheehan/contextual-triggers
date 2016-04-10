@@ -15,6 +15,7 @@ import android.util.Log;
 import com.keepfit.triggers.utils.Broadcast;
 
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
+import com.keepfit.triggers.utils.enums.TriggerType;
 
 import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
@@ -22,12 +23,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
  * Created by Edward on 4/8/2016.
  */
-public class DateThread extends TriggerThread {
+public class DateThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     private static final String TAG = "DateThread";
     private static final String TITLE = "Date";
     private static int num;
@@ -40,7 +42,7 @@ public class DateThread extends TriggerThread {
     public static ArrayList<String> descriptions = new ArrayList<String>();
 
     public DateThread(Context context) {
-        super(TITLE, false, context);
+        super(TITLE, TriggerType.CALENDAR, false, context);
     }
 
     boolean sent = false;
@@ -82,7 +84,7 @@ public class DateThread extends TriggerThread {
             cursor.moveToNext();
 
         }
-s
+
 //        for(int i = 0; i < events.size(); i++) {
 //            Log.d("Name Of Event", events.get(i).getName());
 //            Log.d("Start Time", events.get(i).getStart());
@@ -119,6 +121,11 @@ s
     @Override
     public void doStopAction() {
 
+    }
+
+    @Override
+    public List<KeepFitCalendarEvent> getTriggerObject() {
+        return events;
     }
 
     @Override
