@@ -18,6 +18,7 @@
         <activity
             android:name=".activity.SettingsActivity"
             android:screenOrientation="portrait"
+            android:parentActivityName=".activity.MainActivity"
             android:label="@string/title_activity_settings" />
         <service android:name=".TriggerService"
             android:exported="false"/>

@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         fromNotification = false;
         if (getIntent().getExtras() != null) {
             Bundle bundle = getIntent().getExtras();

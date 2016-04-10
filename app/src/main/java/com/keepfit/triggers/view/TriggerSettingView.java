@@ -1,7 +1,9 @@
 package com.keepfit.triggers.view;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.TypedArray;
+import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.CheckBox;
@@ -25,6 +27,8 @@ public class TriggerSettingView extends LinearLayout {
     private TextView txtInfo;
 
     private TriggerThread thread;
+    private SharedPreferences prefs;
+    private String preferenceKey;
 
     public TriggerSettingView(Context context, TriggerThread thread) {
         super(context);
@@ -57,7 +61,13 @@ public class TriggerSettingView extends LinearLayout {
         txtTitle = (TextView) findViewById(R.id.txt_title);
         txtInfo = (TextView) findViewById(R.id.txt_info);
 
-        checkbox.setChecked(thread.isRunning());
+
+        prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        preferenceKey = thread.getName() + "_checked";
+        boolean checked = prefs.getBoolean(preferenceKey, false);
+        checkbox.setChecked(checked);
+        thread.setEnabled(checked);
+
         txtTitle.setText(thread.getName());
 
         Extension.setRippleBackground(findViewById(R.id.container_text), context);
@@ -84,6 +94,9 @@ public class TriggerSettingView extends LinearLayout {
     private void doCheckAction(boolean isChecked) {
         thread.pauseThread(isChecked);
         thread.setEnabled(isChecked);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(preferenceKey, isChecked);
+        editor.commit();
     }
 
     private void setupThread() {

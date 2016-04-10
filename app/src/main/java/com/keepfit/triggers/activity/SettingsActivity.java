@@ -12,6 +12,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.MenuItem;
 
 import com.keepfit.triggers.R;
@@ -30,6 +31,8 @@ import java.util.List;
  * API Guide</a> for more information on developing a Settings UI.
  */
 public class SettingsActivity extends AppCompatPreferenceActivity {
+    private static final String TAG = "SettingsActivity";
+
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -79,6 +82,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * @see #sBindPreferenceSummaryToValueListener
      */
     private static void bindPreferenceSummaryToValue(Preference preference) {
+        if (preference == null) {
+            Log.w(TAG, "Preference not initialized!");
+            return;
+        }
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
 
@@ -94,8 +101,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 //        setupActionBar();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
-
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     /**
      * {@inheritDoc}
