@@ -17,6 +17,7 @@ import com.keepfit.triggers.utils.Broadcast;
 import com.keepfit.triggers.utils.Extension;
 import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
+import com.keepfit.triggers.weather.WeatherEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -163,8 +164,10 @@ public class TriggerService extends Service {
         Extension.sendNotification(context, "TIMESTAMP!", timeStamp + " Events: " + dateThread.getTriggerObject().size());
     }
 
-    private void handleWeatherReceived() {
-
+    private void handleWeatherReceived(Intent intent) {
+        WeatherEvent weatherEvent = (WeatherEvent) intent.getSerializableExtra("weatherEvent");
+        if (weatherEvent == null) return;
+        Extension.sendNotification(context, "WEATHER", String.format("Lat: %s; Long: %s; TZ: %s; Off: %s", weatherEvent.getLatitude(), weatherEvent.getLongitude(), weatherEvent.getTimezone(), weatherEvent.getOffset()));
     }
 
     class TriggerReceiver extends BroadcastReceiver {
@@ -185,7 +188,7 @@ public class TriggerService extends Service {
                     handleTimeReceived(intent);
                     break;
                 case WEATHER:
-                    handleWeatherReceived();
+                    handleWeatherReceived(intent);
                     break;
             }
         }

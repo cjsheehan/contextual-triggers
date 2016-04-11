@@ -5,6 +5,7 @@ import android.content.Intent;
 
 import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
+import com.keepfit.triggers.weather.WeatherEvent;
 
 import java.util.ArrayList;
 
@@ -37,6 +38,13 @@ public class Broadcast {
         Intent intent = new Intent(TriggerType.STEP_COUNTER.title);
         intent.putExtra("completeness", completeness);
         intent.putExtra(ACTION, TriggerType.STEP_COUNTER.id);
+        context.sendBroadcast(intent);
+    }
+
+    public static void broadcastWeatherEvents(Context context, WeatherEvent weatherEvent) {
+        Intent intent = new Intent(TriggerType.WEATHER.title);
+        intent.putExtra("weatherEvent", weatherEvent);
+        intent.putExtra(ACTION, TriggerType.WEATHER.id);
         context.sendBroadcast(intent);
     }
 
