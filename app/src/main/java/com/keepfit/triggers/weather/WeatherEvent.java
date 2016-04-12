@@ -1,12 +1,14 @@
 package com.keepfit.triggers.weather;
 
+import android.util.Log;
+
 import java.io.Serializable;
 
 /**
  * Created by Chris on 10/04/2016.
  */
 public class WeatherEvent implements Serializable {
-
+    private static final String TAG = "WeatherEvent";
     private String latitude;
     private String longitude;
     private String timezone;
@@ -27,6 +29,26 @@ public class WeatherEvent implements Serializable {
         this.hourly = hourly;
         this.daily = daily;
         this.alerts = alerts;
+    }
+
+    public Forecast getCurrentForecast() {
+        Forecast forecast = new Forecast();
+        try {
+            forecast.setLatitude(Double.parseDouble(latitude));
+            forecast.setLongitude(Double.parseDouble(longitude));
+            forecast.setTime(Integer.parseInt(currently.time));
+            forecast.setSummary(currently.summary);
+            forecast.setTemperature(Double.parseDouble(currently.temperature));
+            forecast.setPrecipProbability(Double.parseDouble(currently.precipProbability));
+            if(currently.sunriseTime != null)
+                forecast.setSunriseTime(Integer.parseInt(currently.sunriseTime));
+            if(currently.sunsetTime != null)
+                forecast.setSunsetTime(Integer.parseInt(currently.sunsetTime));
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            Log.e(TAG, "Failed to convert params for Forecast object");
+        }
+        return forecast;
     }
 
     @Override

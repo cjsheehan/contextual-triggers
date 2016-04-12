@@ -24,6 +24,7 @@ import com.keepfit.triggers.utils.Dates;
 import com.keepfit.triggers.utils.Extension;
 import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
+import com.keepfit.triggers.weather.Forecast;
 import com.keepfit.triggers.weather.WeatherEvent;
 
 import java.util.Date;
@@ -178,6 +179,13 @@ public class TriggerService extends Service {
     private void handleWeatherReceived(Intent intent) {
         WeatherThread weatherThread = (WeatherThread) getTrigger(TriggerType.WEATHER);
         weatherEvent = weatherThread.getTriggerObject();
+        Forecast forecast = weatherEvent.getCurrentForecast();
+        Extension.sendNotification(context, "WEATHER", String.format("Summary: %s; Temp: %s; precipProb: %s; Lat: %s; Long: %s; ",
+                forecast.getSummary(),
+                forecast.getTemperature(),
+                forecast.getPrecipProbability(),
+                forecast.getLatitude(),
+                forecast.getLongitude()));
         Extension.sendNotification(context, "WEATHER", String.format("Lat: %s; Long: %s; TZ: %s; Off: %s",
                 weatherEvent.getLatitude(), weatherEvent.getLongitude(), weatherEvent.getTimezone(), weatherEvent
                         .getOffset()));
