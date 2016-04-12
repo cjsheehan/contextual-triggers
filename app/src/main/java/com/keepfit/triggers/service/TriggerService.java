@@ -20,6 +20,7 @@ import com.keepfit.triggers.utils.Broadcast;
 import com.keepfit.triggers.utils.Extension;
 import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
+import com.keepfit.triggers.weather.Forecast;
 import com.keepfit.triggers.weather.WeatherEvent;
 
 import java.util.ArrayList;
@@ -174,6 +175,13 @@ public class TriggerService extends Service {
 
     private void handlePointsOfInterestReceived(Intent intent) {
         Results poiEvent = (Results) intent.getSerializableExtra("poiEvent");
+        Forecast forecast = weatherEvent.getCurrentForecast();
+        Extension.sendNotification(context, "WEATHER", String.format("Summary: %s; Temp: %s; precipProb: %s; Lat: %s; Long: %s; ",
+                forecast.getSummary(),
+                forecast.getTemperature(),
+                forecast.getPrecipProbability(),
+                forecast.getLatitude(),
+                forecast.getLongitude()));
         if (poiEvent == null) return;
         int numPoi = poiEvent.getItems().length;
         if (numPoi > 0) {
