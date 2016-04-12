@@ -158,9 +158,7 @@ public class TriggerService extends Service {
 
     private void handleTimeReceived(Intent intent) {
         String timeStamp = intent.getStringExtra("timeStamp");
-
         DateThread dateThread = (DateThread) getTrigger(TriggerType.CALENDAR);
-
         Extension.sendNotification(context, "TIMESTAMP!", timeStamp + " Events: " + dateThread.getTriggerObject().size());
     }
 
