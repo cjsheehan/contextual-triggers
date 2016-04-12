@@ -64,7 +64,7 @@
     <EditTextPreference
         android:defaultValue="@string/pref_location_longitude"
         android:inputType="numberDecimal|numberSigned"
-        android:key="custom"
+        android:key="custom_longitude"
         android:maxLines="1"
         android:selectAllOnFocus="true"
         android:singleLine="true"

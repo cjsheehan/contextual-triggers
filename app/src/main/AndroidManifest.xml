@@ -25,8 +25,9 @@
             android:screenOrientation="portrait"
             android:parentActivityName=".activity.MainActivity"
             android:label="@string/title_activity_settings" />
-        <service android:name=".TriggerService"
+        <service android:name=".service.TriggerService"
             android:exported="false"/>
+        <service android:name=".service.GeofenceTransitionsIntentService"/>
     </application>
 
 </manifest>
