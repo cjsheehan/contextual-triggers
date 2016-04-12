@@ -29,6 +29,22 @@
         android:title="@string/pref_latitude"
         android:dependency="pref_home_enabled"/>
 
+    <Preference
+        android:title="@string/use_current_location"
+        android:key="@string/home_location_button"
+        android:summary="@string/use_home_current_location_summary"
+        android:dependency="pref_home_enabled"/>
+
+    <EditTextPreference
+        android:key="home_address"
+        android:inputType="textMultiLine"
+        android:maxLines="3"
+        android:lines="3"
+        android:gravity="top|left"
+        android:selectAllOnFocus="true"
+        android:title="@string/home_address"
+        android:dependency="pref_home_enabled"/>
+
     <SwitchPreference
         android:defaultValue="false"
         android:key="pref_work_enabled"
@@ -53,6 +69,22 @@
         android:selectAllOnFocus="true"
         android:singleLine="true"
         android:title="@string/pref_latitude"
+        android:dependency="pref_work_enabled"/>
+
+    <Preference
+        android:title="@string/use_current_location"
+        android:key="@string/work_location_button"
+        android:summary="@string/use_work_current_location_summary"
+        android:dependency="pref_work_enabled"/>
+
+    <EditTextPreference
+        android:key="work_address"
+        android:inputType="textMultiLine"
+        android:maxLines="3"
+        android:lines="3"
+        android:gravity="top|left"
+        android:selectAllOnFocus="true"
+        android:title="@string/work_address"
         android:dependency="pref_work_enabled"/>
 
     <SwitchPreference
@@ -81,7 +113,20 @@
         android:title="@string/pref_latitude"
         android:dependency="pref_custom_enabled"/>
 
+    <Preference
+        android:title="@string/use_current_location"
+        android:key="@string/custom_location_button"
+        android:summary="@string/use_custom_current_location_summary"
+        android:dependency="pref_custom_enabled"/>
 
-
+    <EditTextPreference
+        android:key="custom_address"
+        android:inputType="textMultiLine"
+        android:maxLines="3"
+        android:lines="3"
+        android:gravity="top|left"
+        android:selectAllOnFocus="true"
+        android:title="@string/custom_address"
+        android:dependency="pref_custom_enabled"/>
 
 </PreferenceScreen>

@@ -11,7 +11,13 @@ public enum TriggerPreference {
     WORK_LONGITUDE("work_longitude"),
     WORK_LATITUDE("work_latitude"),
     CUSTOM_LONGITUDE("custom_longitude"),
-    CUSTOM_LATITUDE("custom_latitude");
+    CUSTOM_LATITUDE("custom_latitude"),
+    HOME_CURRENT_LOCATION("home_location_button"),
+    WORK_CURRENT_LOCATION("work_location_button"),
+    CUSTOM_CURRENT_LOCATION("custom_location_button"),
+    HOME_ADDRESS("home_address"),
+    WORK_ADDRESS("work_address"),
+    CUSTOM_ADDRESS("custom_address");
 
     public String title;
 

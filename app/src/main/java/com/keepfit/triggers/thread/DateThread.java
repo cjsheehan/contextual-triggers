@@ -1,32 +1,20 @@
 package com.keepfit.triggers.thread;
 
-import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CalendarContract;
-import android.support.annotation.Keep;
-import android.text.format.DateUtils;
-import android.util.Log;
-
 
 import com.keepfit.triggers.utils.Broadcast;
-
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.utils.enums.TriggerType;
 
-import java.lang.reflect.Array;
-import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Created by Edward on 4/8/2016.

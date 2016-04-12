@@ -19,4 +19,14 @@
     <string name="pref_home_location">Home location</string>
     <string name="pref_work_location">Work location</string>
     <string name="pref_custom_location">Custom location</string>
+    <string name="use_current_location">Use Current Location</string>
+    <string name="use_home_current_location_summary">Use your current location to set the latitude and longitude for your home.</string>
+    <string name="home_location_button">home_location_button</string>
+    <string name="use_work_current_location_summary">Use your current location to set the latitude and longitude for your work.</string>
+    <string name="work_location_button">work_location_button</string>
+    <string name="use_custom_current_location_summary">Use your current location to set the latitude and longitude for your custom location.</string>
+    <string name="custom_location_button">custom_location_button</string>
+    <string name="home_address">Use Home Address for Lat and Long</string>
+    <string name="work_address">Use Work Address for Lat and Long</string>
+    <string name="custom_address">Use Custom Address for Lat and Long</string>
 </resources>

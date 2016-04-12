@@ -1,4 +1,4 @@
-package com.keepfit.triggers.thread;
+package com.keepfit.triggers.location;
 
 import android.Manifest;
 import android.app.PendingIntent;
@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -18,25 +20,25 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.vision.barcode.Barcode;
 import com.keepfit.triggers.listener.PermissionRequestListener;
 import com.keepfit.triggers.listener.PermissionResponseListener;
 import com.keepfit.triggers.service.GeofenceTransitionsIntentService;
 import com.keepfit.triggers.utils.enums.TriggerPreference;
-import com.keepfit.triggers.utils.enums.TriggerType;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Edward on 4/8/2016.
+ * Created by Edward on 4/12/2016.
  */
-public class LocationThread extends TriggerThread<Object> implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, ResultCallback<Status> {
-
-    private static final String TAG = "LocationThread";
-    private static final String TITLE = "Location";
+public class LocationService implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
+        .OnConnectionFailedListener, ResultCallback<Status> {
+    private static final String TAG = "LocationService";
+    private static final int MAX_ADDRESSES = 5;
+    private static final int VERSION_CODE = 1;
     private static final int GEOFENCE_RADIUS_IN_METERS = 1000;
     private static final int GEOFENCE_EXPIRATION_IN_MILLISECONDS = 600000;
     private static final int GEOFENCE_LOITERING_DELAY = 10000;
@@ -44,45 +46,72 @@ public class LocationThread extends TriggerThread<Object> implements
     private static final String WORK_KEY = "work";
     private static final String CUSTOM_KEY = "custom";
 
-    private PermissionRequestListener listener;
-    private SharedPreferences prefs;
+    private Context context;
     private GoogleApiClient googleApiClient;
     private Location lastLocation;
+    private Geocoder coder;
+    private List<Address> address;
     private List<Geofence> geoFences;
+    private PermissionRequestListener listener;
+    private SharedPreferences prefs;
     private PendingIntent geofencePendingIntent;
-    private boolean accessGranted, locationReceived;
 
-    public LocationThread(Context context, PermissionRequestListener listener) {
-        super(TITLE, TriggerType.LOCATION, false, context);
-        this.listener = listener;
+    public LocationService(Context context) {
+        this.context = context;
+        coder = new Geocoder(context);
         geoFences = new ArrayList<>();
     }
 
-    @Override
-    public void doRunAction() {
-        if (accessGranted && !locationReceived) {
-            locationReceived = true;
-        }
+    public LocationService(Context context, PermissionRequestListener listener) {
+        this(context);
+        this.listener = listener;
     }
 
-    @Override
-    public void doStartAction() {
+    public void connect() {
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
         createGoogleApiClient();
         googleApiClient.connect();
     }
 
-    @Override
-    public void doStopAction() {
+    public void disconnect() {
         List<String> requestIds = new ArrayList<>();
-        for (Geofence geofence : geoFences)
-            requestIds.add(geofence.getRequestId());
-
-        LocationServices.GeofencingApi.removeGeofences(googleApiClient, requestIds)
-            .setResultCallback(this);
+        for (Geofence geofence : geoFences) {
+            if (geofence != null)
+                requestIds.add(geofence.getRequestId());
+        }
+        if (!requestIds.isEmpty())
+            LocationServices.GeofencingApi.removeGeofences(googleApiClient, requestIds)
+                    .setResultCallback(this);
 
         geoFences = new ArrayList<>();
         googleApiClient.disconnect();
+    }
+
+    public Barcode.GeoPoint getLocationFromAddress(String streetAddress) {
+        try {
+            address = coder.getFromLocationName(streetAddress, MAX_ADDRESSES);
+        } catch (IOException e) {
+            Log.e(TAG, "Error getting address for " + streetAddress + ".", e);
+        }
+        if (address == null)
+            return null;
+        Address location = address.get(0);
+
+        return new Barcode.GeoPoint(VERSION_CODE, location.getLatitude(), location.getLongitude());
+    }
+
+    public void requestLocation(PermissionResponseListener permissionResponseListener) {
+        lastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                googleApiClient);
+        permissionResponseListener.setLocation(lastLocation);
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager
+                .PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission
+                .ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            listener.notifyPermissionRequested(permissionResponseListener);
+            return;
+        } else {
+            permissionResponseListener.notifyPermissionGranted();
+        }
     }
 
     @Override
@@ -90,25 +119,31 @@ public class LocationThread extends TriggerThread<Object> implements
         Log.d(TAG, "GEOFENCES WORKED!!! " + status);
     }
 
-    private void createGoogleApiClient() {
-        if (googleApiClient == null) {
-            googleApiClient = new GoogleApiClient.Builder(context)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
-                    .build();
-        }
-    }
-
     @Override
     public void onConnected(Bundle connectionHint) {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager
+        handleConnection();
+    }
+
+    private boolean connectionPermissionGranted;
+
+    private void handleConnection() {
+        if (!connectionPermissionGranted || ActivityCompat.checkSelfPermission(context, Manifest.permission
+                .ACCESS_FINE_LOCATION) != PackageManager
                 .PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission
                 .ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            listener.notifyPermissionRequested(this);
+            listener.notifyPermissionRequested(new PermissionResponseListener() {
+                @Override
+                public void permissionGranted(Location location) {
+                    connectionPermissionGranted = true;
+                    handleConnection();
+                }
+
+                @Override
+                public void permissionDenied() {
+                    connectionPermissionGranted = false;
+                }
+            });
             return;
-        } else {
-            accessGranted = true;
         }
         lastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 googleApiClient);
@@ -126,6 +161,11 @@ public class LocationThread extends TriggerThread<Object> implements
     @Override
     public void onConnectionSuspended(int i) {
         Log.w(TAG, "Connection suspended... " + i);
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
     }
 
     private GeofencingRequest createGeoFences() {
@@ -168,16 +208,9 @@ public class LocationThread extends TriggerThread<Object> implements
                 .setExpirationDuration(GEOFENCE_EXPIRATION_IN_MILLISECONDS)
                 .setTransitionTypes(
                         Geofence.GEOFENCE_TRANSITION_ENTER |
-                        Geofence.GEOFENCE_TRANSITION_EXIT |
-                        Geofence.GEOFENCE_TRANSITION_DWELL)
+                                Geofence.GEOFENCE_TRANSITION_EXIT |
+                                Geofence.GEOFENCE_TRANSITION_DWELL)
                 .build();
-    }
-
-    protected void createLocationRequest() {
-        LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(20000);
-        locationRequest.setFastestInterval(10000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_LOW_POWER);
     }
 
     /**
@@ -196,23 +229,27 @@ public class LocationThread extends TriggerThread<Object> implements
                 FLAG_UPDATE_CURRENT);
     }
 
-    @Override
-    public Object getTriggerObject() {
-        return lastLocation;
+    private void createGoogleApiClient() {
+        if (googleApiClient == null) {
+            googleApiClient = new GoogleApiClient.Builder(context)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
     }
 
-    @Override
-    protected String getTitle() {
-        return TITLE;
+    public void setPermissionRequestListener(PermissionRequestListener permissionRequestListener) {
+        listener = permissionRequestListener;
     }
 
-    @Override
-    protected String getMessage() {
-        return String.format("You reached the goal for location!");
+    public Location getLocation() {
+        if (connectionPermissionGranted)
+            return lastLocation;
+        else {
+            Log.w(TAG, "Permission for locations has not been granted.");
+            return null;
+        }
     }
 
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-
-    }
 }

@@ -117,11 +117,6 @@ public class TriggerService extends Service {
         context = mainContext;
     }
 
-    public static void locationPermissionGranted() {
-        LocationThread thread = (LocationThread) getTrigger(TriggerType.LOCATION);
-        thread.locationPermissionGranted();
-    }
-
     final class AlgorithmBaseThread extends BaseThread {
 
         public AlgorithmBaseThread() {
@@ -254,8 +249,6 @@ public class TriggerService extends Service {
                     break;
             }
         }
-
-
     }
 
     private void checkScenarios() {

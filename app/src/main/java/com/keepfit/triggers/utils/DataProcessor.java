@@ -1,6 +1,7 @@
 package com.keepfit.triggers.utils;
 
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
+import com.keepfit.triggers.weather.Forecast;
 import com.keepfit.triggers.weather.WeatherEvent;
 
 import java.util.Date;
@@ -14,8 +15,8 @@ public class DataProcessor {
 
     public static boolean isThereAnyCalendarEventInTheWay(long differenceParam, List<KeepFitCalendarEvent> calendarEvents){
         for (KeepFitCalendarEvent event : calendarEvents) {
-            long startDifference = Math.abs(event.getStart().getTime() - new Date(System.currentTimeMillis()));
-            long endDifference = Math.abs(event.getEnd().getTime() - new Date(System.currentTimeMillis()));
+            long startDifference = Math.abs(event.getStart().getTime() - new Date(System.currentTimeMillis()).getTime());
+            long endDifference = Math.abs(event.getEnd().getTime() - new Date(System.currentTimeMillis()).getTime());
             if (startDifference < differenceParam || endDifference < differenceParam){
                 System.out.println("Annoying calendar event found: " + event.getName());
                 return true;

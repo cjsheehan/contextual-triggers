@@ -14,8 +14,9 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.keepfit.triggers.R;
+import com.keepfit.triggers.listener.PermissionResponseListener;
 import com.keepfit.triggers.service.TriggerService;
-import com.keepfit.triggers.listener.PermissionListener;
+import com.keepfit.triggers.listener.PermissionRequestListener;
 import com.keepfit.triggers.thread.DateThread;
 import com.keepfit.triggers.thread.LocationThread;
 import com.keepfit.triggers.thread.StepCounterThread;
@@ -24,12 +25,13 @@ import com.keepfit.triggers.thread.TriggerThread;
 import com.keepfit.triggers.thread.WeatherThread;
 import com.keepfit.triggers.view.TriggerSettingView;
 
-public class MainActivity extends AppCompatActivity implements PermissionListener {
+public class MainActivity extends AppCompatActivity implements PermissionRequestListener {
     private static final String TAG = "MainActivity";
 
     Intent serviceIntent;
     Button btnTriggers;
     boolean fromNotification;
+    PermissionResponseListener permissionResponseListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,11 +88,12 @@ public class MainActivity extends AppCompatActivity implements PermissionListene
     public static final int LOCATION_PERMISSION_CODE = 100;
 
     @Override
-    public void notifyPermissionRequested() {
+    public void notifyPermissionRequested(PermissionResponseListener permissionResponseListener) {
         ActivityCompat.requestPermissions(this, new String[]{
                         Manifest.permission
                                 .ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
                 LOCATION_PERMISSION_CODE);
+        this.permissionResponseListener = permissionResponseListener;
     }
 
     @Override
@@ -99,11 +102,12 @@ public class MainActivity extends AppCompatActivity implements PermissionListene
             case LOCATION_PERMISSION_CODE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // Permission Granted
-                    TriggerService.locationPermissionGranted();
+                    permissionResponseListener.notifyPermissionGranted();
                 } else {
                     // Permission Denied
                     Toast.makeText(MainActivity.this, "Location Access Denied", Toast.LENGTH_SHORT)
                             .show();
+                    permissionResponseListener.notifyPermissionDenied();
                 }
                 break;
             default:
