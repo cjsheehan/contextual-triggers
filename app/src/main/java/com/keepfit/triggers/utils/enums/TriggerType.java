@@ -9,7 +9,8 @@ public enum TriggerType {
     LOCATION(2, "Location"),
     STEP_COUNTER(3, "Step Counter"),
     TIME(4, "Time"),
-    WEATHER(5, "Weather");
+    WEATHER(5, "Weather"),
+    POI(6, "Points Of Interest");
 
     public int id;
     public String title;

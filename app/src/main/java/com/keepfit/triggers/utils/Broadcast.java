@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 
+import com.keepfit.triggers.interests.Results;
 import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.weather.WeatherEvent;
@@ -53,6 +54,13 @@ public class Broadcast {
         Intent intent = new Intent(TriggerType.LOCATION.title);
         intent.putExtra("location", location);
         intent.putExtra(ACTION, TriggerType.LOCATION.id);
+        context.sendBroadcast(intent);
+    }
+
+    public static void broadcastPointsOfInterestEvents(Context context, Results poiEvent) {
+        Intent intent = new Intent(TriggerType.POI.title);
+        intent.putExtra("poiEvent", poiEvent);
+        intent.putExtra(ACTION, TriggerType.POI.id);
         context.sendBroadcast(intent);
     }
 }

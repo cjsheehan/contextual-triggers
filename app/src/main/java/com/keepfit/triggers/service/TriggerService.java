@@ -9,6 +9,8 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.keepfit.triggers.interests.Item;
+import com.keepfit.triggers.interests.Results;
 import com.keepfit.triggers.thread.BaseThread;
 import com.keepfit.triggers.thread.DateThread;
 import com.keepfit.triggers.thread.LocationThread;
@@ -141,7 +143,8 @@ public class TriggerService extends Service {
     }
 
     private void handleDateReceived(Intent intent) {
-        ArrayList<KeepFitCalendarEvent> events = (ArrayList<KeepFitCalendarEvent>) intent.getSerializableExtra("events");
+        ArrayList<KeepFitCalendarEvent> events = (ArrayList<KeepFitCalendarEvent>) intent.getSerializableExtra
+                ("events");
         if (events.isEmpty()) return;
         Extension.sendNotification(context, "EVENT", events.get(0).getName() + " at " + events.get(0).getStart());
     }
@@ -157,13 +160,39 @@ public class TriggerService extends Service {
     private void handleTimeReceived(Intent intent) {
         String timeStamp = intent.getStringExtra("timeStamp");
         DateThread dateThread = getDateThread();
-        Extension.sendNotification(context, "TIMESTAMP!", timeStamp + " Events: " + dateThread.getTriggerObject().size());
+        Extension.sendNotification(context, "TIMESTAMP!", timeStamp + " Events: " + dateThread.getTriggerObject()
+                .size());
     }
 
     private void handleWeatherReceived(Intent intent) {
         WeatherEvent weatherEvent = (WeatherEvent) intent.getSerializableExtra("weatherEvent");
         if (weatherEvent == null) return;
-        Extension.sendNotification(context, "WEATHER", String.format("Lat: %s; Long: %s; TZ: %s; Off: %s", weatherEvent.getLatitude(), weatherEvent.getLongitude(), weatherEvent.getTimezone(), weatherEvent.getOffset()));
+        Extension.sendNotification(context, "WEATHER", String.format("Lat: %s; Long: %s; TZ: %s; Off: %s",
+                weatherEvent.getLatitude(), weatherEvent.getLongitude(), weatherEvent.getTimezone(), weatherEvent
+                        .getOffset()));
+    }
+
+    private void handlePointsOfInterestReceived(Intent intent) {
+        Results poiEvent = (Results) intent.getSerializableExtra("poiEvent");
+        if (poiEvent == null) return;
+        int numPoi = poiEvent.getItems().length;
+        if (numPoi > 0) {
+            String info = String.format("%s poi found for Lat: %s Long: %s", numPoi, poiEvent.getSourceLatitude(),
+                    poiEvent.getSourceLongitude());
+            Item[] item = poiEvent.getItems();
+
+            String poi = String.format("1st poi : Title: %s; Distance(m): %s; Category: %s; Lat: %s; Long: %s;",
+                    item[0].getTitle(),
+                    item[0].getDistance(),
+                    item[0].getCategory().getTitle(),
+                    item[0].getPosition()[0],
+                    item[0].getPosition()[1]);
+
+            Extension.sendNotification(context, "POI", info + " : " + poi);
+        } else {
+            Extension.sendNotification(context, "POI", String.format("No poi available for Lat: %s Long: %s",
+                    poiEvent.getSourceLatitude(), poiEvent.getSourceLongitude()));
+        }
     }
 
     private static TriggerThread getTrigger(TriggerType triggerType) {
@@ -200,6 +229,9 @@ public class TriggerService extends Service {
                     break;
                 case WEATHER:
                     handleWeatherReceived(intent);
+                    break;
+                case POI:
+                    handlePointsOfInterestReceived(intent);
                     break;
             }
         }
