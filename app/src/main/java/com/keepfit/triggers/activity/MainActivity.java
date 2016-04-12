@@ -1,18 +1,21 @@
 package com.keepfit.triggers.activity;
 
-import android.app.DatePickerDialog;
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.keepfit.triggers.R;
 import com.keepfit.triggers.TriggerService;
+import com.keepfit.triggers.listener.PermissionListener;
 import com.keepfit.triggers.thread.DateThread;
 import com.keepfit.triggers.thread.LocationThread;
 import com.keepfit.triggers.thread.StepCounterThread;
@@ -21,10 +24,7 @@ import com.keepfit.triggers.thread.TriggerThread;
 import com.keepfit.triggers.thread.WeatherThread;
 import com.keepfit.triggers.view.TriggerSettingView;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements PermissionListener {
     private static final String TAG = "MainActivity";
 
     Intent serviceIntent;
@@ -74,12 +74,40 @@ public class MainActivity extends AppCompatActivity {
             TriggerService.addThread(new DateThread(this));
             TriggerService.addThread(new StepCounterThread(this));
             TriggerService.addThread(new WeatherThread(this));
-            TriggerService.addThread(new LocationThread(this));
+            TriggerService.addThread(new LocationThread(this, this));
             TriggerService.setContext(this);
         }
 
         for (TriggerThread thread : TriggerService.getThreads()) {
             container.addView(new TriggerSettingView(this, thread));
+        }
+    }
+
+    public static final int LOCATION_PERMISSION_CODE = 100;
+
+    @Override
+    public void notifyPermissionRequested() {
+        ActivityCompat.requestPermissions(this, new String[]{
+                        Manifest.permission
+                                .ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                LOCATION_PERMISSION_CODE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case LOCATION_PERMISSION_CODE:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permission Granted
+                    TriggerService.locationPermissionGranted();
+                } else {
+                    // Permission Denied
+                    Toast.makeText(MainActivity.this, "Location Access Denied", Toast.LENGTH_SHORT)
+                            .show();
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
@@ -91,6 +119,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
     }
 
     @Override

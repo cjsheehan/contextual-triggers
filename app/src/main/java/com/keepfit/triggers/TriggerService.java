@@ -12,6 +12,7 @@ import android.util.Log;
 import com.keepfit.triggers.thread.BaseThread;
 import com.keepfit.triggers.thread.DateThread;
 import com.keepfit.triggers.thread.StepCounterThread;
+import com.keepfit.triggers.thread.LocationThread;
 import com.keepfit.triggers.thread.TimeThread;
 import com.keepfit.triggers.thread.TriggerThread;
 import com.keepfit.triggers.thread.WeatherThread;
@@ -92,6 +93,12 @@ public class TriggerService extends Service {
     public static void addThread(TriggerThread thread) {
         if (threads == null)
             threads = new ArrayList<>();
+        for (TriggerThread t : threads) {
+            if (t.getTriggerType() == thread.getTriggerType()) {
+                // Thread already added!
+                return;
+            }
+        }
         threads.add(thread);
     }
 
@@ -107,6 +114,11 @@ public class TriggerService extends Service {
         context = mainContext;
     }
 
+    public static void locationPermissionGranted() {
+        LocationThread thread = (LocationThread) getTrigger(TriggerType.LOCATION);
+        thread.locationPermissionGranted();
+    }
+
     final class AlgorithmBaseThread extends BaseThread {
 
         public AlgorithmBaseThread() {
@@ -115,9 +127,6 @@ public class TriggerService extends Service {
 
         @Override
         public void doRunAction() {
-            for (TriggerThread thread : threads) {
-                thread.doRunAction();
-            }
         }
 
         @Override
@@ -140,17 +149,6 @@ public class TriggerService extends Service {
         public void pauseThread(boolean pause) {
 
         }
-    }
-
-    private TriggerThread getTrigger(TriggerType triggerType) {
-        TriggerThread thread = null;
-        for (TriggerThread t : threads) {
-            if (t.getTriggerType().equals(triggerType)) {
-                thread = t;
-                break;
-            }
-        }
-        return thread;
     }
 
     private void handleDateReceived(Intent intent) {
@@ -178,6 +176,21 @@ public class TriggerService extends Service {
     private void handleWeatherReceived(Intent intent) {
         WeatherThread weatherThread = (WeatherThread) getTrigger(TriggerType.WEATHER);
         weatherEvent = weatherThread.getTriggerObject();
+    }
+
+    private static TriggerThread getTrigger(TriggerType triggerType) {
+        TriggerThread thread = null;
+        for (TriggerThread t : threads) {
+            if (t.getTriggerType().equals(triggerType)) {
+                thread = t;
+                break;
+            }
+        }
+        return thread;
+    }
+
+    private DateThread getDateThread() {
+        return (DateThread) getTrigger(TriggerType.CALENDAR);
     }
 
     class TriggerReceiver extends BroadcastReceiver {
