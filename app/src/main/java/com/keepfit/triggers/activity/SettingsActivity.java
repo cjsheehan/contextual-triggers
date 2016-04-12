@@ -188,10 +188,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // updated to reflect the new value, per the Android Design
             // guidelines.
 
-            bindPreferenceSummaryToValue(findPreference("history_above_below_list"));
-            bindPreferenceSummaryToValue(findPreference("completeness_percentage"));
-            bindPreferenceSummaryToValue(findPreference("history_display_unit"));
-            bindPreferenceSummaryToValue(findPreference("number_of_weeks"));
+            bindPreferenceSummaryToValue(findPreference("home_longitude"));
+            bindPreferenceSummaryToValue(findPreference("home_latitude"));
+            bindPreferenceSummaryToValue(findPreference("work_longitude"));
+            bindPreferenceSummaryToValue(findPreference("work_latitude"));
+            bindPreferenceSummaryToValue(findPreference("custom_longitude"));
+            bindPreferenceSummaryToValue(findPreference("custom_latitude"));
 
 
         }

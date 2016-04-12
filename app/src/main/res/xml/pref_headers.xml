@@ -10,8 +10,8 @@
     <header
         android:fragment="com.keepfit.triggers.activity.SettingsActivity$HistoryPreferenceFragment"
         android:icon="@android:drawable/ic_menu_sort_by_size"
-        android:summary="History and statistic filtering and display settings."
-        android:title="@string/pref_header_other" />
+        android:summary="Stored locations"
+        android:title="@string/pref_header_locations" />
 
 
 </preference-headers>
