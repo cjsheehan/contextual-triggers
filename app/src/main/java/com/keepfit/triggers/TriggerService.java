@@ -16,16 +16,14 @@ import com.keepfit.triggers.thread.TimeThread;
 import com.keepfit.triggers.thread.TriggerThread;
 import com.keepfit.triggers.thread.WeatherThread;
 import com.keepfit.triggers.utils.Broadcast;
+import com.keepfit.triggers.utils.DataProcessor;
 import com.keepfit.triggers.utils.Dates;
 import com.keepfit.triggers.utils.Extension;
 import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.weather.WeatherEvent;
-import com.keepfit.triggers.weather.WeatherService;
 
 import java.util.Date;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -166,11 +164,15 @@ public class TriggerService extends Service {
     private void handleStepCounterReceived() {
         StepCounterThread stepCounterThread = (StepCounterThread) getTrigger(TriggerType.STEP_COUNTER);
         stepcounterPercentage = stepCounterThread.getTriggerObject();
+        if(stepcounterPercentage >= 95){
+            checkScenarios();
+        }
     }
 
     private void handleTimeReceived(Intent intent) {
         TimeThread timeThread = (TimeThread) getTrigger(TriggerType.TIME);
         time = timeThread.getTriggerObject();
+        checkScenarios();
     }
 
     private void handleWeatherReceived(Intent intent) {
@@ -199,22 +201,39 @@ public class TriggerService extends Service {
                     handleWeatherReceived(intent);
                     break;
             }
-
-
-            checkFirstScenario();
-            checkSecondScenario();
         }
 
 
     }
 
+    private void checkScenarios() {
+        checkFirstScenario();
+        checkSecondScenario();
+        checkThirdScenario();
+    }
+
+    private void checkThirdScenario() {
+        long twoHours = 2 * 60 * 60 * 1000;
+        if(!DataProcessor.isThereAnyCalendarEventInTheWay(twoHours, this.calendarEvents)){
+            if(!DataProcessor.isTheWeatherBad(this.weatherEvent)){
+                if(DataProcessor.isLaterThan(Dates.getDateFromHours("11:00:00"))){
+                    Extension.sendNotification(context, "You should go out!", "It's early, You don't have any calendar events nad the weather is good :" + this.weatherEvent.getCurrentForecast().getSummary());
+                }
+            }
+        }
+    }
+
     private void checkSecondScenario() {
+        if(!DataProcessor.isTheWeatherBad(this.weatherEvent) && DataProcessor.isCompletenessLowerThan(30.0, this.stepcounterPercentage)){
+            Extension.sendNotification(context, "You should go out!", "The weather is good :" + this.weatherEvent.getCurrentForecast().getSummary());
+            notificationSent = true;
+        }
 
     }
 
     private void checkFirstScenario() {
-        if (isLaterThan(Dates.getDateFromHours("17:00:00"))){
-            if(isCompletenessLowerThan(70)){
+        if (DataProcessor.isLaterThan(Dates.getDateFromHours("17:00:00"))){
+            if(DataProcessor.isCompletenessLowerThan(70.0, this.stepcounterPercentage)){
                 Extension.sendNotification(context, "MOVE!", "The day is almost over and your goal is not completed.");
                 notificationSent = true;
             }
@@ -224,37 +243,6 @@ public class TriggerService extends Service {
 
 
 
-    private boolean isThereAnyCalendarEventInTheWay(long differenceParam){
-        for (KeepFitCalendarEvent event : this.calendarEvents) {
-            long startDifference = Math.abs(event.getStart().getTime() - new Date(System.currentTimeMillis()));
-            long endDifference = Math.abs(event.getEnd().getTime() - new Date(System.currentTimeMillis()));
-            if (startDifference < differenceParam || endDifference < differenceParam){
-                System.out.println("Annoying calendar event found: " + event.getName());
-                return true;
-            }
-        }
-        System.out.println("There are no annoying calendar events");
-        return false;
-    };
-
-    private boolean isLaterThan(Date date){
-        Date currentTime = new Date(System.currentTimeMillis());
-        if (currentTime.getTime()>date.getTime()){
-            System.out.println("The current time is: " + currentTime.getTime() + " later than " + date.getTime());
-            return true;
-        }
-        System.out.println("The current time is: " + currentTime.getTime() + " earlier than " + date.getTime());
-        return false;
-    }
-
-    private boolean isCompletenessLowerThan(double percentage){
-        if (this.stepcounterPercentage< percentage){
-            System.out.println("The dailiy step goal completeness is: " + this.stepcounterPercentage + " lower than " + percentage);
-            return true;
-        }
-        System.out.println("The dailiy step goal completeness is: " + this.stepcounterPercentage + " larger than " + percentage);
-        return false;
-    }
 
 
 
