@@ -2,6 +2,7 @@ package com.keepfit.triggers.utils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
 
 import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
@@ -48,4 +49,10 @@ public class Broadcast {
         context.sendBroadcast(intent);
     }
 
+    public static void broadcastLocationReceived(Context context, Location location) {
+        Intent intent = new Intent(TriggerType.LOCATION.title);
+        intent.putExtra("location", location);
+        intent.putExtra(ACTION, TriggerType.LOCATION.id);
+        context.sendBroadcast(intent);
+    }
 }

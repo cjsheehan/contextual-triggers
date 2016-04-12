@@ -32,14 +32,13 @@ import java.util.regex.Pattern;
 public class DateThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     private static final String TAG = "DateThread";
     private static final String TITLE = "Date";
-    private static int num;
 
     public ArrayList<KeepFitCalendarEvent> events = new ArrayList<>();
 
-    public static ArrayList<String> nameOfEvent = new ArrayList<String>();
-    public static ArrayList<String> startDates = new ArrayList<String>();
-    public static ArrayList<String> endDates = new ArrayList<String>();
-    public static ArrayList<String> descriptions = new ArrayList<String>();
+    public static ArrayList<String> nameOfEvent = new ArrayList<>();
+    public static ArrayList<String> startDates = new ArrayList<>();
+    public static ArrayList<String> endDates = new ArrayList<>();
+    public static ArrayList<String> descriptions = new ArrayList<>();
 
     public DateThread(Context context) {
         super(TITLE, TriggerType.CALENDAR, false, context);
@@ -115,7 +114,6 @@ public class DateThread extends TriggerThread<List<KeepFitCalendarEvent>> {
 
     @Override
     public void doStartAction() {
-        num = 0;
     }
 
     @Override
