@@ -14,7 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.keepfit.triggers.R;
-import com.keepfit.triggers.TriggerService;
+import com.keepfit.triggers.service.TriggerService;
 import com.keepfit.triggers.listener.PermissionListener;
 import com.keepfit.triggers.thread.DateThread;
 import com.keepfit.triggers.thread.LocationThread;

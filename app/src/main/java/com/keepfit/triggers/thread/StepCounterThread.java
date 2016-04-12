@@ -10,9 +10,8 @@ import android.hardware.SensorManager;
 import android.preference.PreferenceManager;
 
 import com.keepfit.triggers.utils.Broadcast;
+import com.keepfit.triggers.utils.enums.TriggerPreference;
 import com.keepfit.triggers.utils.enums.TriggerType;
-
-import java.util.Date;
 
 /**
  * Created by Edward on 4/8/2016.
@@ -37,7 +36,7 @@ public class StepCounterThread extends TriggerThread<Double> implements SensorEv
             public void run() {
                 if (isRunning()) {
 
-                    dailyGoal = Double.parseDouble(prefs.getString("step_length", "1000"));
+                    dailyGoal = Double.parseDouble(prefs.getString(TriggerPreference.STEP_LENGTH.title, "1000"));
 
                     txtDisplay.setText(String.valueOf(steps));
                     if (steps >= dailyGoal) {

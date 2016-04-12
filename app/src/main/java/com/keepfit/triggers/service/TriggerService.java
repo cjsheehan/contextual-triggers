@@ -1,4 +1,4 @@
-package com.keepfit.triggers;
+package com.keepfit.triggers.service;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;

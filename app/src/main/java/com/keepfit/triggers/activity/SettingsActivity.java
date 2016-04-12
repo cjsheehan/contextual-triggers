@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.MenuItem;
 
 import com.keepfit.triggers.R;
+import com.keepfit.triggers.utils.enums.TriggerPreference;
 
 import java.util.List;
 
@@ -83,7 +84,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     private static void bindPreferenceSummaryToValue(Preference preference) {
         if (preference == null) {
-            Log.w(TAG, "Preference not initialized!");
+            Log.w(TAG, "TriggerPreference not initialized!");
             return;
         }
         // Set the listener to watch for value changes.
@@ -157,7 +158,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("step_length"));
+            bindPreferenceSummaryToValue(findPreference(TriggerPreference.STEP_LENGTH.title));
         }
 
         @Override
@@ -188,14 +189,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // updated to reflect the new value, per the Android Design
             // guidelines.
 
-            bindPreferenceSummaryToValue(findPreference("home_longitude"));
-            bindPreferenceSummaryToValue(findPreference("home_latitude"));
-            bindPreferenceSummaryToValue(findPreference("work_longitude"));
-            bindPreferenceSummaryToValue(findPreference("work_latitude"));
-            bindPreferenceSummaryToValue(findPreference("custom_longitude"));
-            bindPreferenceSummaryToValue(findPreference("custom_latitude"));
-
-
+            bindPreferenceSummaryToValue(findPreference(TriggerPreference.HOME_LONGITUDE.title));
+            bindPreferenceSummaryToValue(findPreference(TriggerPreference.HOME_LATITUDE.title));
+            bindPreferenceSummaryToValue(findPreference(TriggerPreference.WORK_LONGITUDE.title));
+            bindPreferenceSummaryToValue(findPreference(TriggerPreference.WORK_LATITUDE.title));
+            bindPreferenceSummaryToValue(findPreference(TriggerPreference.CUSTOM_LONGITUDE.title));
+            bindPreferenceSummaryToValue(findPreference(TriggerPreference.CUSTOM_LATITUDE.title));
         }
 
         @Override
