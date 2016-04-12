@@ -34,7 +34,7 @@ public class Broadcast {
         context.sendBroadcast(intent);
     }
 
-    public static void broadcastStepCompleteness(Context context, int completeness) {
+    public static void broadcastStepCompleteness(Context context, double completeness) {
         Intent intent = new Intent(TriggerType.STEP_COUNTER.title);
         intent.putExtra("completeness", completeness);
         intent.putExtra(ACTION, TriggerType.STEP_COUNTER.id);

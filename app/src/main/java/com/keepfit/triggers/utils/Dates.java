@@ -89,4 +89,16 @@ public class Dates {
         return d;
     }
 
+
+    public static Date getDateFromHours(String hours){
+        Date date1 = null;
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        try {
+            date1 = format.parse(hours);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return date1;
+    }
+
 }

@@ -25,6 +25,7 @@ public class StepCounterThread extends TriggerThread<Double> implements SensorEv
     private SharedPreferences prefs;
     private double steps;
     double dailyGoal;
+    double previousProgress;
 
     public StepCounterThread(Context context) {
         super(TITLE, TriggerType.STEP_COUNTER, false, context);
@@ -39,10 +40,12 @@ public class StepCounterThread extends TriggerThread<Double> implements SensorEv
 
                     dailyGoal = Double.parseDouble(prefs.getString("step_length", "1000"));
 
+                    double progress=steps * 100 / dailyGoal;
+
                     txtDisplay.setText(String.valueOf(steps));
-                    if (steps >= dailyGoal) {
-                        Broadcast.broadcastStepCompleteness(context, 100);
-                        sendNotification();
+                    if (previousProgress+10 < progress ) {
+                        previousProgress = progress;
+                        Broadcast.broadcastStepCompleteness(context, progress);
                     }
                 }
             }

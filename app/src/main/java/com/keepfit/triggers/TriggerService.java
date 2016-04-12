@@ -11,14 +11,21 @@ import android.util.Log;
 
 import com.keepfit.triggers.thread.BaseThread;
 import com.keepfit.triggers.thread.DateThread;
+import com.keepfit.triggers.thread.StepCounterThread;
 import com.keepfit.triggers.thread.TimeThread;
 import com.keepfit.triggers.thread.TriggerThread;
+import com.keepfit.triggers.thread.WeatherThread;
 import com.keepfit.triggers.utils.Broadcast;
+import com.keepfit.triggers.utils.Dates;
 import com.keepfit.triggers.utils.Extension;
 import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.weather.WeatherEvent;
+import com.keepfit.triggers.weather.WeatherService;
 
+import java.util.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +40,12 @@ public class TriggerService extends Service {
     private static boolean running;
     private static Context context;
     private TriggerReceiver receiver;
+
+    private List<KeepFitCalendarEvent> calendarEvents;
+    private WeatherEvent weatherEvent;
+    private Double stepcounterPercentage;
+    private String time;
+    boolean  notificationSent = false;
 
     @Override
     public void onCreate() {
@@ -143,29 +156,26 @@ public class TriggerService extends Service {
     }
 
     private void handleDateReceived(Intent intent) {
-        ArrayList<KeepFitCalendarEvent> events = (ArrayList<KeepFitCalendarEvent>) intent.getSerializableExtra("events");
-        if (events.isEmpty()) return;
-        Extension.sendNotification(context, "EVENT", events.get(0).getName() + " at " + events.get(0).getStart());
+        DateThread dateThread = (DateThread) getTrigger(TriggerType.CALENDAR);
+        calendarEvents = dateThread.getTriggerObject();
     }
 
     private void handleLocationReceived() {
-
-    }
+         }
 
     private void handleStepCounterReceived() {
-
+        StepCounterThread stepCounterThread = (StepCounterThread) getTrigger(TriggerType.STEP_COUNTER);
+        stepcounterPercentage = stepCounterThread.getTriggerObject();
     }
 
     private void handleTimeReceived(Intent intent) {
-        String timeStamp = intent.getStringExtra("timeStamp");
-        DateThread dateThread = (DateThread) getTrigger(TriggerType.CALENDAR);
-        Extension.sendNotification(context, "TIMESTAMP!", timeStamp + " Events: " + dateThread.getTriggerObject().size());
+        TimeThread timeThread = (TimeThread) getTrigger(TriggerType.TIME);
+        time = timeThread.getTriggerObject();
     }
 
     private void handleWeatherReceived(Intent intent) {
-        WeatherEvent weatherEvent = (WeatherEvent) intent.getSerializableExtra("weatherEvent");
-        if (weatherEvent == null) return;
-        Extension.sendNotification(context, "WEATHER", String.format("Lat: %s; Long: %s; TZ: %s; Off: %s", weatherEvent.getLatitude(), weatherEvent.getLongitude(), weatherEvent.getTimezone(), weatherEvent.getOffset()));
+        WeatherThread weatherThread = (WeatherThread) getTrigger(TriggerType.WEATHER);
+        weatherEvent = weatherThread.getTriggerObject();
     }
 
     class TriggerReceiver extends BroadcastReceiver {
@@ -189,7 +199,65 @@ public class TriggerService extends Service {
                     handleWeatherReceived(intent);
                     break;
             }
+
+
+            checkFirstScenario();
+            checkSecondScenario();
+        }
+
+
+    }
+
+    private void checkSecondScenario() {
+
+    }
+
+    private void checkFirstScenario() {
+        if (isLaterThan(Dates.getDateFromHours("17:00:00"))){
+            if(isCompletenessLowerThan(70)){
+                Extension.sendNotification(context, "MOVE!", "The day is almost over and your goal is not completed.");
+                notificationSent = true;
+            }
         }
     }
+
+
+
+
+    private boolean isThereAnyCalendarEventInTheWay(long differenceParam){
+        for (KeepFitCalendarEvent event : this.calendarEvents) {
+            long startDifference = Math.abs(event.getStart().getTime() - new Date(System.currentTimeMillis()));
+            long endDifference = Math.abs(event.getEnd().getTime() - new Date(System.currentTimeMillis()));
+            if (startDifference < differenceParam || endDifference < differenceParam){
+                System.out.println("Annoying calendar event found: " + event.getName());
+                return true;
+            }
+        }
+        System.out.println("There are no annoying calendar events");
+        return false;
+    };
+
+    private boolean isLaterThan(Date date){
+        Date currentTime = new Date(System.currentTimeMillis());
+        if (currentTime.getTime()>date.getTime()){
+            System.out.println("The current time is: " + currentTime.getTime() + " later than " + date.getTime());
+            return true;
+        }
+        System.out.println("The current time is: " + currentTime.getTime() + " earlier than " + date.getTime());
+        return false;
+    }
+
+    private boolean isCompletenessLowerThan(double percentage){
+        if (this.stepcounterPercentage< percentage){
+            System.out.println("The dailiy step goal completeness is: " + this.stepcounterPercentage + " lower than " + percentage);
+            return true;
+        }
+        System.out.println("The dailiy step goal completeness is: " + this.stepcounterPercentage + " larger than " + percentage);
+        return false;
+    }
+
+
+
+
 
 }
