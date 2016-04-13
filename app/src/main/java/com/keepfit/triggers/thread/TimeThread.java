@@ -16,12 +16,13 @@ import java.util.Calendar;
 public class TimeThread extends TriggerThread<String> {
     private static final String TAG = "TimeThread";
     private static final String TITLE = "Time";
+    private static final int TIMEOUT = 1000;
 
     String currentTime;
     private TimeInterval[] timeIntervals;
 
     public TimeThread(Context context) {
-        super(TITLE, TriggerType.TIME, false, context);
+        super(TITLE, TriggerType.TIME, false, TIMEOUT, context);
     }
 
     @Override

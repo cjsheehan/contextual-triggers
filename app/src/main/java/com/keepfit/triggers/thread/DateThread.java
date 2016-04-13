@@ -22,6 +22,7 @@ import java.util.List;
 public class DateThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     private static final String TAG = "DateThread";
     private static final String TITLE = "Date";
+    private static final int TIMEOUT = 1000;
 
     public ArrayList<KeepFitCalendarEvent> events = new ArrayList<>();
 
@@ -31,7 +32,7 @@ public class DateThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     public static ArrayList<String> descriptions = new ArrayList<>();
 
     public DateThread(Context context) {
-        super(TITLE, TriggerType.CALENDAR, false, context);
+        super(TITLE, TriggerType.CALENDAR, false, TIMEOUT, context);
     }
 
     boolean sent = false;

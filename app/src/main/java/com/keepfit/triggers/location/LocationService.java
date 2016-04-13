@@ -55,17 +55,24 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
     private PermissionRequestListener listener;
     private SharedPreferences prefs;
     private PendingIntent geofencePendingIntent;
+    private boolean disableGeofences;
 
-    public LocationService(Context context) {
+    private LocationService(Context context) {
         this.context = context;
         coder = new Geocoder(context);
         geoFences = new ArrayList<>();
     }
 
-    public LocationService(Context context, PermissionRequestListener listener) {
+    public LocationService(Context context, PermissionRequestListener listener, boolean disableGeofences) {
         this(context);
         this.listener = listener;
+        this.disableGeofences = disableGeofences;
     }
+
+    public LocationService(Context context, PermissionRequestListener listener) {
+        this(context, listener, false);
+    }
+
 
     public void connect() {
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -121,13 +128,13 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
 
     @Override
     public void onConnected(Bundle connectionHint) {
+        if (disableGeofences) return;
         handleConnection();
     }
 
     private boolean connectionPermissionGranted;
-
     private void handleConnection() {
-        if (!connectionPermissionGranted || ActivityCompat.checkSelfPermission(context, Manifest.permission
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission
                 .ACCESS_FINE_LOCATION) != PackageManager
                 .PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission
                 .ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -144,6 +151,8 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
                 }
             });
             return;
+        } else {
+            connectionPermissionGranted = true;
         }
         lastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 googleApiClient);

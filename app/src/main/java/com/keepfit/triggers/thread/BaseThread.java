@@ -12,18 +12,16 @@ public abstract class BaseThread extends Thread implements IThread {
     private boolean started, running, enabled;
 
     protected Context context;
+    private int timeout;
 
-    public BaseThread(String name) { this(name, true, null); }
+    public BaseThread(String name) { this(name, true, 1000, null); }
 
-    public BaseThread(String name, Context context) {
-        this(name, true, context);
-    }
-
-    public BaseThread(String name, boolean enabled, Context context) {
+    public BaseThread(String name, boolean enabled, int timeout, Context context) {
         super(name);
         started = false;
         running = false;
         this.enabled = enabled;
+        this.timeout = timeout;
         this.context = context;
     }
 
@@ -34,7 +32,7 @@ public abstract class BaseThread extends Thread implements IThread {
     public void run() {
         while (running) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(timeout);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

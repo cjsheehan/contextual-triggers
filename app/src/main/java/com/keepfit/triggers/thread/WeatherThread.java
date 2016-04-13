@@ -13,6 +13,7 @@ import com.keepfit.triggers.weather.WeatherService;
 public class WeatherThread extends TriggerThread<WeatherEvent> implements ResponseListener<WeatherEvent> {
     private static final String TAG = "WeatherThread";
     private static final String TITLE = "Weather Service";
+    private static final int TIMEOUT = 1000;
 
     private Context context;
     private WeatherService weatherService;
@@ -21,7 +22,7 @@ public class WeatherThread extends TriggerThread<WeatherEvent> implements Respon
     private boolean sent = false;
 
     public WeatherThread(Context context) {
-        super(TITLE, TriggerType.WEATHER, false, context);
+        super(TITLE, TriggerType.WEATHER, false, TIMEOUT, context);
         this.context = context;
     }
 

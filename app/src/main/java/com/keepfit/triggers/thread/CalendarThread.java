@@ -21,10 +21,10 @@ import java.util.regex.Pattern;
 public class CalendarThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     private static final String TAG = "CalendarThread";
     private static final String TITLE = "Calendar";
-    private static int num;
+    private static final int TIMEOUT = 1000;
 
     public CalendarThread(Context context) {
-        super(TITLE, TriggerType.CALENDAR, false, context);
+        super(TITLE, TriggerType.CALENDAR, false, TIMEOUT, context);
     }
 
     @Override
@@ -225,7 +225,7 @@ public class CalendarThread extends TriggerThread<List<KeepFitCalendarEvent>> {
 
     @Override
     public void doStartAction() {
-        num = 0;
+
     }
 
     @Override

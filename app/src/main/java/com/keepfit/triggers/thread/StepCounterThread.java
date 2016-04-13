@@ -19,6 +19,8 @@ import com.keepfit.triggers.utils.enums.TriggerType;
 public class StepCounterThread extends TriggerThread<Double> implements SensorEventListener{
     private static final String TAG = "StepCounterThread";
     private static final String TITLE = "Step Counter";
+    private static final int TIMEOUT = 1000;
+
     private SensorManager mSensorManager;
     private Sensor mStepCounterSensor;
     private SharedPreferences prefs;
@@ -27,7 +29,7 @@ public class StepCounterThread extends TriggerThread<Double> implements SensorEv
     double previousProgress;
 
     public StepCounterThread(Context context) {
-        super(TITLE, TriggerType.STEP_COUNTER, false, context);
+        super(TITLE, TriggerType.STEP_COUNTER, false, TIMEOUT, context);
     }
 
     @Override

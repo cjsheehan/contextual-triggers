@@ -23,7 +23,7 @@ public class PointsOfInterestThread extends TriggerThread<Results> implements Re
     private boolean sent = false;
 
     public PointsOfInterestThread(Context context) {
-        super(TITLE, TriggerType.POI, false, context);
+        super(TITLE, TriggerType.POI, false, 1000, context);
         this.context = context;
     }
 

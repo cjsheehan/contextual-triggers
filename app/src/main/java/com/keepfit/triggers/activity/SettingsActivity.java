@@ -198,7 +198,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_history_settings);
             setHasOptionsMenu(true);
 
-            locationService = new LocationService(getActivity(), this);
+            locationService = new LocationService(getActivity(), this, true);
 
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
