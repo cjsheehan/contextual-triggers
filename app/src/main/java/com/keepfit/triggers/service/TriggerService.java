@@ -5,10 +5,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.location.Location;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.android.gms.location.Geofence;
 import com.keepfit.triggers.interests.Item;
 import com.keepfit.triggers.interests.Results;
 import com.keepfit.triggers.notification.Notification;
@@ -22,12 +26,14 @@ import com.keepfit.triggers.utils.Extension;
 import com.keepfit.triggers.utils.TriggerCache;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.utils.enums.Scenario;
+import com.keepfit.triggers.utils.enums.TriggerPreference;
 import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.weather.Forecast;
 import com.keepfit.triggers.weather.WeatherEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 /**
  * Created by Edward on 4/8/2016.
@@ -41,11 +47,13 @@ public class TriggerService extends Service {
     private TriggerReceiver receiver;
     private static boolean running, started;
     private boolean notificationSent = false;
+    private SharedPreferences prefs;
 
     @Override
     public void onCreate() {
         Log.d(TAG, "onCreate!");
         thread = new TriggerBaseThread();
+        prefs = PreferenceManager.getDefaultSharedPreferences(context);
         registerReceivers();
     }
 
@@ -236,7 +244,11 @@ public class TriggerService extends Service {
         CalendarThread calendarThread = (CalendarThread) getTrigger(TriggerType.CALENDAR);
     }
 
-    private void handleLocationReceived() {
+    private void handleLocationReceived(Intent intent) {
+     String  geofenceId = (String) intent.getSerializableExtra("geofenceEvent");
+        Notification.sendNotification(context, "You entered " + geofenceId," ", Scenario.THIRD);
+        checkScenarios();
+
 
     }
 
@@ -298,7 +310,7 @@ public class TriggerService extends Service {
                         handleDateReceived(intent);
                         break;
                     case LOCATION:
-                        handleLocationReceived();
+                        handleLocationReceived(intent);
                         break;
                     case STEP_COUNTER:
                         handleStepCounterReceived(intent);
@@ -389,5 +401,6 @@ public class TriggerService extends Service {
         }
         return true;
     }
+
 
 }

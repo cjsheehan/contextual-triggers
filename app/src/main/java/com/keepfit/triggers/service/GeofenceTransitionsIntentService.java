@@ -7,6 +7,9 @@ import android.util.Log;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
+import com.keepfit.triggers.utils.Broadcast;
+import com.keepfit.triggers.utils.TriggerCache;
+import com.keepfit.triggers.utils.enums.TriggerType;
 
 import java.util.List;
 
@@ -35,11 +38,12 @@ public class GeofenceTransitionsIntentService extends IntentService {
         if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
                 geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
 
+
             // Get the geofences that were triggered. A single event can trigger
             // multiple geofences.
-            List triggeringGeofences = geofencingEvent.getTriggeringGeofences();
+            List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
 
-            // Get the transition details as a String.
+//             Get the transition details as a String.
 //            String geofenceTransitionDetails = getGeofenceTransitionDetails(
 //                    this,
 //                    geofenceTransition,
@@ -48,6 +52,8 @@ public class GeofenceTransitionsIntentService extends IntentService {
 
             // Send notification and log the transition details.
 //            sendNotification(geofenceTransitionDetails);
+//            TriggerCache.put(TriggerType.LOCATION, geofenceTransition);
+            Broadcast.broadcastGeofenceEvents(this, triggeringGeofences.get(0).getRequestId());
         } else {
             // Log the error.
             Log.e(TAG, "GEOFENCE ERROR...");
