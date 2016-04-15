@@ -23,6 +23,7 @@ public class LocationThread extends TriggerThread<Object> {
     private static final String TITLE = "Location";
 
     private LocationService locationService;
+    private Location lastLocation;
     private boolean waitForSetup = false, waitForLocation = false;
 
     public LocationThread(Context context, PermissionRequestListener listener) {
@@ -31,12 +32,13 @@ public class LocationThread extends TriggerThread<Object> {
     }
 
     @Override
-    public void doRunAction() {
+    public void doTriggerRunAction() {
         if (waitForLocation) {
             locationService.requestLocation(new PermissionResponseListener() {
                 @Override
                 protected void permissionGranted(Location location) {
                     if (location == null) return;
+                    lastLocation = location;
                     Broadcast.broadcastLocationReceived(context, location);
                     TriggerCache.put(TriggerType.LOCATION, locationService.getLocation());
                     waitForLocation = false;
@@ -94,24 +96,15 @@ public class LocationThread extends TriggerThread<Object> {
         locationService.disconnect();
     }
 
-    /**
-     * Gets the last known location from the LocationService.
-     *
-     * @return The lastLocation
-     */
-    @Override
-    public Object getTriggerObject() {
-        return locationService.getLocation();
-    }
-
     @Override
     protected String getTitle() {
         return TITLE;
     }
 
     @Override
-    protected String getMessage() {
-        return String.format("You reached the goal for location!");
+    protected String getTextToDisplayOnUI() {
+        return lastLocation == null ? "No location" : String.format("Lat[%s] - Long[%s]", lastLocation.getLatitude(),
+                lastLocation.getLongitude());
     }
 
 }

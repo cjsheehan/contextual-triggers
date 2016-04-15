@@ -33,25 +33,16 @@ public class StepCounterThread extends TriggerThread<Double> implements SensorEv
     }
 
     @Override
-    public void doRunAction() {
-        ((Activity) context).runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (isRunning()) {
+    public void doTriggerRunAction() {
+        dailyGoal = Double.parseDouble(prefs.getString(TriggerPreference.STEP_LENGTH.title, "1000"));
 
-                    dailyGoal = Double.parseDouble(prefs.getString(TriggerPreference.STEP_LENGTH.title, "1000"));
+        double progress = steps * 100 / dailyGoal;
+        TriggerCache.put(TriggerType.STEP_COUNTER, progress);
 
-                    double progress = steps * 100 / dailyGoal;
-                    TriggerCache.put(TriggerType.STEP_COUNTER, progress);
-
-                    txtDisplay.setText(String.valueOf(steps));
-                    if (previousProgress + 10 < progress) {
-                        previousProgress = progress;
-                        Broadcast.broadcastStepCompleteness(context, progress);
-                    }
-                }
-            }
-        });
+        if (previousProgress + 10 < progress) {
+            previousProgress = progress;
+            Broadcast.broadcastStepCompleteness(context, progress);
+        }
     }
 
     @Override
@@ -71,18 +62,13 @@ public class StepCounterThread extends TriggerThread<Double> implements SensorEv
     }
 
     @Override
-    public Double getTriggerObject() {
-        return steps;
-    }
-
-    @Override
     protected String getTitle() {
         return TITLE;
     }
 
     @Override
-    protected String getMessage() {
-        return String.format("You reached the goal for the step counter!");
+    protected String getTextToDisplayOnUI() {
+        return String.valueOf(steps);
     }
 
     @Override

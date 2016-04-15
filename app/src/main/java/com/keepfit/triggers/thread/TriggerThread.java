@@ -1,5 +1,6 @@
 package com.keepfit.triggers.thread;
 
+import android.app.Activity;
 import android.content.Context;
 import android.widget.TextView;
 
@@ -29,7 +30,18 @@ public abstract class TriggerThread<T> extends BaseThread {
     }
 
     protected abstract String getTitle();
-    protected abstract String getMessage();
-    public abstract T getTriggerObject();
+    protected abstract void doTriggerRunAction();
+    protected abstract String getTextToDisplayOnUI();
+
+    @Override
+    public void doRunAction() {
+        doTriggerRunAction();
+        ((Activity) context).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                txtDisplay.setText(getTextToDisplayOnUI());
+            }
+        });
+    }
 
 }

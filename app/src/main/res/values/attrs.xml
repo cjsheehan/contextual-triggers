@@ -2,8 +2,6 @@
 <resources>
     <declare-styleable name="TriggerSettingView">
         <attr name="setting_title" format="string" />
-        <attr name="setting_trigger_type" format="enum">
-            <enum name="first" value="1"/>
-        </attr>
+        <attr name="setting_is_long_text" format="boolean" />
     </declare-styleable>
 </resources>

@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal">
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="horizontal">
 
     <LinearLayout
         android:id="@+id/container_text"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
         <CheckBox
             android:id="@+id/check_trigger"
@@ -16,9 +17,10 @@
             android:layout_gravity="center_vertical"
             android:layout_marginLeft="10dp"
             android:scaleX="1.5"
-            android:scaleY="1.5" />
+            android:scaleY="1.5"/>
 
         <RelativeLayout
+            android:id="@+id/text_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -30,18 +32,20 @@
                 android:gravity="center_vertical"
                 android:padding="10dp"
                 android:text="@string/first_trigger"
-                android:textStyle="bold"
-                android:textSize="18dp" />
+                android:singleLine="true"
+                android:textSize="18dp"
+                android:textStyle="bold"/>
 
             <TextView
                 android:id="@+id/txt_info"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
+                android:layout_toRightOf="@+id/txt_title"
+                android:gravity="right|center_vertical"
+                android:singleLine="true"
                 android:padding="10dp"
-                android:text="@string/placeholder"
-                android:textSize="18dp" />
+                android:textSize="18dp"/>
         </RelativeLayout>
-    </LinearLayout>
 
+    </LinearLayout>
 </LinearLayout>

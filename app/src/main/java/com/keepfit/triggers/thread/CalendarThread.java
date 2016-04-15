@@ -1,5 +1,6 @@
 package com.keepfit.triggers.thread;
 
+import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -39,52 +40,51 @@ public class CalendarThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     boolean sent = false;
 
     @Override
-    public void doRunAction() {
-        if(isRunning()) {
-            Calendar startDate = Calendar.getInstance();
-            Calendar endDate = Calendar.getInstance();
-            endDate.add(Calendar.DATE, 1);
+    public void doTriggerRunAction() {
+        Calendar startDate = Calendar.getInstance();
+        Calendar endDate = Calendar.getInstance();
+        endDate.add(Calendar.DATE, 1);
 
-            String selection = "(( " + CalendarContract.Events.DTSTART + " >= " + startDate.getTimeInMillis() + " ) AND ( " + CalendarContract.Events.DTSTART + " <= " + endDate.getTimeInMillis() + " ))";
+        String selection = "(( " + CalendarContract.Events.DTSTART + " >= " + startDate.getTimeInMillis() + " ) AND (" +
+                " " + CalendarContract.Events.DTSTART + " <= " + endDate.getTimeInMillis() + " ))";
 
-            Cursor cursor = context.getContentResolver()
-                    .query(
-                            Uri.parse("content://com.android.calendar/events"),
-                            new String[]{"calendar_id", "title", "description",
-                                    "dtstart", "dtend", "eventLocation"}, selection,
-                            null, null);
-            cursor.moveToFirst();
-            String CNames[] = new String[cursor.getCount()];
+        Cursor cursor = context.getContentResolver()
+                .query(
+                        Uri.parse("content://com.android.calendar/events"),
+                        new String[]{"calendar_id", "title", "description",
+                                "dtstart", "dtend", "eventLocation"}, selection,
+                        null, null);
+        cursor.moveToFirst();
+        String CNames[] = new String[cursor.getCount()];
 
-            // fetching calendars id
-            nameOfEvent.clear();
-            startDates.clear();
-            endDates.clear();
-            descriptions.clear();
-            for (int i = 0; i < CNames.length; i++) {
-                String eventName = cursor.getString(1);
-                String startDt = getDate(Long.parseLong(cursor.getString(3)));
-                String endDt = getDate(Long.parseLong(cursor.getString(4)));
-                SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
-                Date start = new Date();
-                Date end = new Date();
-                try {
-                    start = dateFormat.parse(startDt);
-                    end = dateFormat.parse(endDt);
-                }catch(ParseException e){
-                    Log.e(TAG, e.getMessage(), e);
-                }
-
-                KeepFitCalendarEvent newCalendarEvent = new KeepFitCalendarEvent(eventName, start, end);
-                events.add(newCalendarEvent);
-                cursor.moveToNext();
+        // fetching calendars id
+        nameOfEvent.clear();
+        startDates.clear();
+        endDates.clear();
+        descriptions.clear();
+        for (int i = 0; i < CNames.length; i++) {
+            String eventName = cursor.getString(1);
+            String startDt = getDate(Long.parseLong(cursor.getString(3)));
+            String endDt = getDate(Long.parseLong(cursor.getString(4)));
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+            Date start = new Date();
+            Date end = new Date();
+            try {
+                start = dateFormat.parse(startDt);
+                end = dateFormat.parse(endDt);
+            } catch (ParseException e) {
+                Log.e(TAG, e.getMessage(), e);
             }
-            if (cursor != null)
-                cursor.close();
-            if (!sent) {
-                TriggerCache.put(TriggerType.CALENDAR, events);
-                sent = true;
-            }
+
+            KeepFitCalendarEvent newCalendarEvent = new KeepFitCalendarEvent(eventName, start, end);
+            events.add(newCalendarEvent);
+            cursor.moveToNext();
+        }
+        if (cursor != null)
+            cursor.close();
+        if (!sent) {
+            TriggerCache.put(TriggerType.CALENDAR, events);
+            sent = true;
         }
     }
 
@@ -106,18 +106,15 @@ public class CalendarThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     }
 
     @Override
-    public List<KeepFitCalendarEvent> getTriggerObject() {
-        return events;
+    public String getTextToDisplayOnUI() {
+        if (events == null || events.size() == 0)
+            return "No events";
+        return String.format("%s [%s - %s]", events.get(0).getName(), events.get(0).getStart(), events.get(0).getEnd());
     }
 
     @Override
     protected String getTitle() {
         return TITLE;
-    }
-
-    @Override
-    protected String getMessage() {
-        return String.format("You reached the goal for the date!");
     }
 
 }

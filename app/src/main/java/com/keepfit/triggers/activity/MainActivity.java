@@ -28,6 +28,7 @@ import com.keepfit.triggers.thread.TriggerThread;
 import com.keepfit.triggers.thread.WeatherThread;
 import com.keepfit.triggers.utils.TriggerCache;
 import com.keepfit.triggers.utils.enums.Scenario;
+import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.view.TriggerSettingView;
 
 public class MainActivity extends AppCompatActivity implements PermissionRequestListener {
@@ -103,7 +104,10 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
         }
 
         for (TriggerThread thread : TriggerService.getThreads()) {
-            container.addView(new TriggerSettingView(this, thread));
+            if (thread.getTriggerType() == TriggerType.TIME || thread.getTriggerType() == TriggerType.STEP_COUNTER)
+                container.addView(new TriggerSettingView(this, thread));
+            else
+                container.addView(new TriggerSettingView(this, thread, true));
         }
     }
 

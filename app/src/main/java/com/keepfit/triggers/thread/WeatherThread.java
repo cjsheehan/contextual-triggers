@@ -29,7 +29,7 @@ public class WeatherThread extends TriggerThread<WeatherEvent> implements Respon
     }
 
     @Override
-    public void doRunAction() {
+    public void doTriggerRunAction() {
         if (waitForLocation) {
             Location location = TriggerCache.get(TriggerType.LOCATION, Location.class);
             if (location != null) {
@@ -63,24 +63,20 @@ public class WeatherThread extends TriggerThread<WeatherEvent> implements Respon
     }
 
     @Override
-    public WeatherEvent getTriggerObject() {
-        return weatherEvent;
-    }
-
-    @Override
     protected String getTitle() {
         return TITLE;
     }
 
     @Override
-    protected String getMessage() {
-        return String.format("You reached the goal for weather!");
+    public String getTextToDisplayOnUI() {
+        return weatherEvent == null ? "No weather info" : String.format("%s - %sF", weatherEvent.getCurrentForecast()
+                .getSummary(), weatherEvent.getCurrentForecast().getTemperature());
     }
 
     @Override
     public void onResponse(WeatherEvent response) {
-        if(response != null) {
-            weatherEvent  = response;
+        if (response != null) {
+            weatherEvent = response;
             TriggerCache.put(TriggerType.WEATHER, weatherEvent);
         }
     }

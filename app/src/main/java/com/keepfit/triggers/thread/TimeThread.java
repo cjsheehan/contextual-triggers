@@ -26,22 +26,14 @@ public class TimeThread extends TriggerThread<String> {
     }
 
     @Override
-    public void doRunAction() {
-        ((Activity) context).runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (isRunning()) {
-                    currentTime = Dates.getTime();
-                    txtDisplay.setText(currentTime);
-                    TriggerCache.put(TriggerType.TIME, currentTime);
+    public void doTriggerRunAction() {
+        currentTime = Dates.getTime();
+        TriggerCache.put(TriggerType.TIME, currentTime);
 
-                    TimeInterval interval = checkInterval();
-                    if (interval != null) {
-                        Broadcast.broadcastTimeReached(context, interval.timeStamp);
-                    }
-                }
-            }
-        });
+        TimeInterval interval = checkInterval();
+        if (interval != null) {
+            Broadcast.broadcastTimeReached(context, interval.timeStamp);
+        }
     }
 
     public String getTriggerObject() {
@@ -86,8 +78,8 @@ public class TimeThread extends TriggerThread<String> {
     }
 
     @Override
-    protected String getMessage() {
-        return String.format("You reached the goal for the time!");
+    protected String getTextToDisplayOnUI() {
+        return currentTime;
     }
 
     class TimeInterval {

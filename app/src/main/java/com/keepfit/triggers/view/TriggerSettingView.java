@@ -29,12 +29,20 @@ public class TriggerSettingView extends LinearLayout {
     private TriggerThread thread;
     private SharedPreferences prefs;
     private String preferenceKey;
+    private boolean isLongText;
 
     public TriggerSettingView(Context context, TriggerThread thread) {
         super(context);
         this.context = context;
         this.thread = thread;
+        initialize();
+    }
 
+    public TriggerSettingView(Context context, TriggerThread thread, boolean isLongText) {
+        super(context);
+        this.context = context;
+        this.thread = thread;
+        this.isLongText = isLongText;
         initialize();
     }
 
@@ -49,6 +57,7 @@ public class TriggerSettingView extends LinearLayout {
 
         try {
             String title = a.getString(R.styleable.TriggerSettingView_setting_title);
+            isLongText = a.getBoolean(R.styleable.TriggerSettingView_setting_is_long_text, false);
             txtTitle.setText(title);
         } finally {
             a.recycle();
@@ -57,9 +66,14 @@ public class TriggerSettingView extends LinearLayout {
 
     private void initialize() {
         inflate(context, R.layout.view_trigger_setting, this);
+
         checkbox = (CheckBox) findViewById(R.id.check_trigger);
         txtTitle = (TextView) findViewById(R.id.txt_title);
         txtInfo = (TextView) findViewById(R.id.txt_info);
+
+        if (isLongText) {
+            txtInfo.setTextSize(12);
+        }
 
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
         preferenceKey = thread.getName() + "_checked";

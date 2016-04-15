@@ -32,7 +32,7 @@ public class PointsOfInterestThread extends TriggerThread<Results> implements Re
     }
 
     @Override
-    public void doRunAction() {
+    public void doTriggerRunAction() {
         if (waitForLocation) {
             Location location = TriggerCache.get(TriggerType.LOCATION, Location.class);
             if (location != null) {
@@ -63,23 +63,21 @@ public class PointsOfInterestThread extends TriggerThread<Results> implements Re
     }
 
     @Override
-    public Results getTriggerObject() {
-        return poiEvent;
-    }
-
-    @Override
     protected String getTitle() {
         return TITLE;
     }
 
     @Override
-    protected String getMessage() {
-        return String.format("You reached the goal for poi!");
+    protected String getTextToDisplayOnUI() {
+        if (poiEvent == null || poiEvent.getItems() == null || poiEvent.getItems().length == 0)
+            return "No events";
+        return String.format("%s", poiEvent.getItems()[0].getTitle());
     }
 
     @Override
     public void onResponse(Results response) {
         if(response != null) {
+            poiEvent = response;
             TriggerCache.put(TriggerType.POI, response);
         }
     }
