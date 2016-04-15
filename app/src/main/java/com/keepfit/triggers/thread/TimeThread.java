@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.keepfit.triggers.utils.Broadcast;
 import com.keepfit.triggers.utils.Dates;
+import com.keepfit.triggers.utils.TriggerCache;
 import com.keepfit.triggers.utils.enums.TriggerType;
 
 import java.util.Calendar;
@@ -16,7 +17,6 @@ import java.util.Calendar;
 public class TimeThread extends TriggerThread<String> {
     private static final String TAG = "TimeThread";
     private static final String TITLE = "Time";
-    private static final int TIMEOUT = 1000;
 
     String currentTime;
     private TimeInterval[] timeIntervals;
@@ -33,6 +33,7 @@ public class TimeThread extends TriggerThread<String> {
                 if (isRunning()) {
                     currentTime = Dates.getTime();
                     txtDisplay.setText(currentTime);
+                    TriggerCache.put(TriggerType.TIME, currentTime);
 
                     TimeInterval interval = checkInterval();
                     if (interval != null) {
@@ -103,8 +104,4 @@ public class TimeThread extends TriggerThread<String> {
         }
     }
 
-    @Override
-    protected int getTimeout() {
-        return TIMEOUT;
-    }
 }

@@ -18,7 +18,6 @@ import com.keepfit.triggers.utils.enums.TriggerType;
 public class LocationThread extends TriggerThread<Object> {
     private static final String TAG = "LocationThread";
     private static final String TITLE = "Location";
-    private static final int TIMEOUT = 1000;
 
     private LocationService locationService;
     private boolean waitForLocation = false;
@@ -90,11 +89,6 @@ public class LocationThread extends TriggerThread<Object> {
     @Override
     protected String getMessage() {
         return String.format("You reached the goal for location!");
-    }
-
-    @Override
-    protected int getTimeout() {
-        return TIMEOUT;
     }
 
 }

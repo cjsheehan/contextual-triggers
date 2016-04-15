@@ -23,8 +23,6 @@ public abstract class BaseThread extends Thread implements IThread {
         this.context = context;
     }
 
-    protected abstract int getTimeout();
-
     /**
      * Run the thread.
      */
@@ -32,7 +30,7 @@ public abstract class BaseThread extends Thread implements IThread {
     public void run() {
         while (running) {
             try {
-                Thread.sleep(getTimeout());
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

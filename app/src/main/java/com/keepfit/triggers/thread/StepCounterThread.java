@@ -20,7 +20,6 @@ import com.keepfit.triggers.utils.enums.TriggerType;
 public class StepCounterThread extends TriggerThread<Double> implements SensorEventListener {
     private static final String TAG = "StepCounterThread";
     private static final String TITLE = "Step Counter";
-    private static final int TIMEOUT = 1000;
 
     private SensorManager mSensorManager;
     private Sensor mStepCounterSensor;
@@ -87,7 +86,6 @@ public class StepCounterThread extends TriggerThread<Double> implements SensorEv
         return String.format("You reached the goal for the step counter!");
     }
 
-
     @Override
     public void onSensorChanged(SensorEvent event) {
 //            count.setText(String.valueOf(event.values[0]));
@@ -97,10 +95,5 @@ public class StepCounterThread extends TriggerThread<Double> implements SensorEv
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
-    }
-
-    @Override
-    protected int getTimeout() {
-        return TIMEOUT;
     }
 }

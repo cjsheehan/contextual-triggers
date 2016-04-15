@@ -20,9 +20,6 @@ import com.keepfit.triggers.utils.enums.TriggerType;
 public class PointsOfInterestThread extends TriggerThread<Results> implements ResponseListener<Results> {
     private static final String TAG = "PointsOfInterestThread";
     private static final String TITLE = "POI Service";
-    private static final int STANDARD_TIMEOUT = 1000 * 3600 * 2;  // 2 hours
-    private static int WAIT_TIMEOUT = 1000;
-    private static int TIMEOUT;
 
     private Context context;
     private PointsOfInterestService poiService;
@@ -32,7 +29,6 @@ public class PointsOfInterestThread extends TriggerThread<Results> implements Re
     public PointsOfInterestThread(Context context, PermissionRequestListener listener) {
         super(TITLE, TriggerType.POI, false, context);
         this.context = context;
-        TIMEOUT = STANDARD_TIMEOUT;
     }
 
     @Override
@@ -41,7 +37,6 @@ public class PointsOfInterestThread extends TriggerThread<Results> implements Re
             Location location = TriggerCache.get(TriggerType.LOCATION, Location.class);
             if (location != null) {
                 requestPointsOfInterest(location);
-                TIMEOUT = WAIT_TIMEOUT;
                 waitForLocation = false;
             }
         }
@@ -54,7 +49,6 @@ public class PointsOfInterestThread extends TriggerThread<Results> implements Re
         Location location = TriggerCache.get(TriggerType.LOCATION, Location.class);
         if (location == null) {
             waitForLocation = true;
-            TIMEOUT = WAIT_TIMEOUT;
             return;
         }
         requestPointsOfInterest(location);
@@ -96,8 +90,4 @@ public class PointsOfInterestThread extends TriggerThread<Results> implements Re
 
     }
 
-    @Override
-    protected int getTimeout() {
-        return TIMEOUT;
-    }
 }

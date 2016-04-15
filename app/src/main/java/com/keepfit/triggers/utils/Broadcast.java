@@ -17,8 +17,8 @@ import java.util.ArrayList;
  */
 public class Broadcast {
 
-    public static String ACTION = "action";
-    public static String IS_SCENARIO = "isScenario";
+    public static final String ACTION = "action";
+    public static final String IS_SCENARIO = "isScenario";
 
     /*****
      * Broadcasting

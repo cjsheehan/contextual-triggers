@@ -5,34 +5,26 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.location.Location;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.keepfit.triggers.interests.Item;
-import com.keepfit.triggers.interests.PointsOfInterestResponse;
 import com.keepfit.triggers.interests.Results;
 import com.keepfit.triggers.thread.BaseThread;
-import com.keepfit.triggers.thread.DateThread;
-import com.keepfit.triggers.thread.StepCounterThread;
-import com.keepfit.triggers.thread.LocationThread;
-import com.keepfit.triggers.thread.TimeThread;
+import com.keepfit.triggers.thread.CalendarThread;
 import com.keepfit.triggers.thread.TriggerThread;
-import com.keepfit.triggers.thread.WeatherThread;
 import com.keepfit.triggers.utils.Broadcast;
 import com.keepfit.triggers.utils.DataProcessor;
 import com.keepfit.triggers.utils.Dates;
 import com.keepfit.triggers.utils.Extension;
 import com.keepfit.triggers.utils.TriggerCache;
-import com.keepfit.triggers.utils.TriggerObject;
 import com.keepfit.triggers.utils.enums.Scenario;
 import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.weather.Forecast;
 import com.keepfit.triggers.weather.WeatherEvent;
 
-import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +34,7 @@ import java.util.List;
 public class TriggerService extends Service {
     private static final String TAG = "TriggerService";
 
-    private static AlgorithmBaseThread thread;
+    private static TriggerBaseThread thread;
     private static List<TriggerThread> threads;
     private static Context context;
     private TriggerReceiver receiver;
@@ -52,7 +44,7 @@ public class TriggerService extends Service {
     @Override
     public void onCreate() {
         Log.d(TAG, "onCreate!");
-        thread = new AlgorithmBaseThread();
+        thread = new TriggerBaseThread();
         registerReceivers();
     }
 
@@ -93,6 +85,9 @@ public class TriggerService extends Service {
         for (TriggerType triggerType : TriggerType.values()) {
             registerReceiver(receiver, new IntentFilter(triggerType.title));
         }
+        for (Scenario scenario : Scenario.values()) {
+            registerReceiver(receiver, new IntentFilter(scenario.title));
+        }
     }
 
     public static void addThread(TriggerThread thread) {
@@ -127,14 +122,72 @@ public class TriggerService extends Service {
         context = mainContext;
     }
 
-    final class AlgorithmBaseThread extends BaseThread {
+    final class TriggerBaseThread extends BaseThread {
 
-        public AlgorithmBaseThread() {
-            super("AlgorithmBaseThread");
+        public TriggerBaseThread() {
+            super("TriggerBaseThread");
         }
+
+        private static final int TIMEOUT = 2000;
+        private final static int MAX_UPDATE_ATTEMPTS = 10;
+        private int firstUpdateAttempts, secondUpdateAttempts, thirdUpdateAttempts;
+        private boolean waitForFirst, waitForSecond, waitForThird;
 
         @Override
         public void doRunAction() {
+            if (waitForFirst) {
+                if (firstUpdateAttempts > MAX_UPDATE_ATTEMPTS) {
+                    Log.w(TAG, "First scenario has reached the max attempts.");
+                    waitForFirst = false;
+                    firstUpdateAttempts = 0;
+                } else {
+                    sleep();
+                    firstUpdateAttempts++;
+                    if (checkFirstScenario()) {
+                        // Scenario was hit, so this is done
+                        waitForFirst = false;
+                        firstUpdateAttempts = 0;
+                    }
+                }
+            }
+            if (waitForSecond) {
+                if (secondUpdateAttempts > MAX_UPDATE_ATTEMPTS) {
+                    Log.w(TAG, "Second scenario has reached the max attempts.");
+                    waitForSecond = false;
+                    secondUpdateAttempts = 0;
+                } else {
+                    sleep();
+                    secondUpdateAttempts++;
+                    if (checkSecondScenario()) {
+                        // Scenario was hit, so this is done
+                        waitForSecond = false;
+                        secondUpdateAttempts = 0;
+                    }
+                }
+            }
+            if (waitForThird) {
+                if (thirdUpdateAttempts > MAX_UPDATE_ATTEMPTS) {
+                    Log.w(TAG, "Third scenario has reached the max attempts.");
+                    waitForThird = false;
+                    thirdUpdateAttempts = 0;
+                } else {
+                    sleep();
+                    thirdUpdateAttempts++;
+                    if (checkThirdScenario()) {
+                        // Scenario was hit, so this is done
+                        waitForThird = false;
+                        thirdUpdateAttempts = 0;
+                    }
+                }
+            }
+        }
+
+        private void sleep() {
+            try {
+                Thread.sleep(TIMEOUT);
+            } catch(InterruptedException e) {
+                Log.w(TAG, "Trigger Thread interrupted.", e);
+            }
         }
 
         @Override
@@ -143,6 +196,7 @@ public class TriggerService extends Service {
             for (TriggerThread thread : threads) {
                 thread.startThread();
             }
+            firstUpdateAttempts = secondUpdateAttempts = thirdUpdateAttempts = 0;
         }
 
         @Override
@@ -163,14 +217,22 @@ public class TriggerService extends Service {
             running = !pause;
         }
 
-        @Override
-        protected int getTimeout() {
-            return 1000;
+        protected void notifyWaitForFirst() {
+            waitForFirst = true;
         }
+
+        protected void notifyWaitForSecond() {
+            waitForSecond = true;
+        }
+
+        protected void notifyWaitForThird() {
+            waitForThird = true;
+        }
+
     }
 
     private void handleDateReceived(Intent intent) {
-        DateThread dateThread = (DateThread) getTrigger(TriggerType.CALENDAR);
+        CalendarThread calendarThread = (CalendarThread) getTrigger(TriggerType.CALENDAR);
     }
 
     private void handleLocationReceived() {
@@ -280,30 +342,21 @@ public class TriggerService extends Service {
         }
     }
 
-    private final static int MAX_UPDATE_ATTEMPTS = 10;
-    private int updateCount = 0;
-
     private void checkScenarios() {
         checkFirstScenario();
         checkSecondScenario();
         checkThirdScenario();
     }
 
-    private void checkThirdScenario() {
-        if (updateCount > MAX_UPDATE_ATTEMPTS) {
-            Log.w(TAG, "Max update attempts were reached for third scenario.");
-            updateCount = 0;
-            return;
-        }
+    private boolean checkThirdScenario() {
         long twoHours = 2 * 60 * 60 * 1000;
 
         ArrayList<KeepFitCalendarEvent> calendarEvents = (ArrayList<KeepFitCalendarEvent>) TriggerCache.get
-                (TriggerType.WEATHER);
+                (TriggerType.CALENDAR);
         WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
         if (weatherEvent == null || calendarEvents == null) {
-            Broadcast.broadcastUpdateForThirdScenario(context);
-            updateCount++;
-            return;
+            thread.notifyWaitForThird();
+            return false;
         }
 
         if (!DataProcessor.isThereAnyCalendarEventInTheWay(twoHours, calendarEvents)) {
@@ -315,21 +368,15 @@ public class TriggerService extends Service {
                 }
             }
         }
-        updateCount = 0;
+        return true;
     }
 
-    private void checkSecondScenario() {
-        if (updateCount > MAX_UPDATE_ATTEMPTS) {
-            Log.w(TAG, "Max update attempts were reached for second scenario.");
-            updateCount = 0;
-            return;
-        }
+    private boolean checkSecondScenario() {
         WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
         Double stepCounterPercentage = TriggerCache.get(TriggerType.STEP_COUNTER, Double.class);
-        if (weatherEvent == null || stepCounterPercentage == null || stepCounterPercentage == 0) {
-            Broadcast.broadcastUpdateForSecondScenario(context);
-            updateCount++;
-            return;
+        if (weatherEvent == null || stepCounterPercentage == null) {
+            thread.notifyWaitForSecond();
+            return false;
         }
         if (!DataProcessor.isTheWeatherBad(weatherEvent) && DataProcessor.isCompletenessLowerThan(30.0,
                 stepCounterPercentage)) {
@@ -337,20 +384,14 @@ public class TriggerService extends Service {
                     .getCurrentForecast().getSummary());
             notificationSent = true;
         }
-        updateCount = 0;
+        return true;
     }
 
-    private void checkFirstScenario() {
-        if (updateCount > MAX_UPDATE_ATTEMPTS) {
-            Log.w(TAG, "Max update attempts were reached for first scenario.");
-            updateCount = 0;
-            return;
-        }
+    private boolean checkFirstScenario() {
         Double stepCounterPercentage = TriggerCache.get(TriggerType.STEP_COUNTER, Double.class);
         if (stepCounterPercentage == null) {
-            Broadcast.broadcastUpdateForFirstScenario(context);
-            updateCount++;
-            return;
+            thread.notifyWaitForFirst();
+            return false;
         }
         if (DataProcessor.isLaterThan(Dates.getDateFromHours("17:00:00"))) {
             if (DataProcessor.isCompletenessLowerThan(70.0, stepCounterPercentage)) {
@@ -358,7 +399,7 @@ public class TriggerService extends Service {
                 notificationSent = true;
             }
         }
-        updateCount = 0;
+        return true;
     }
 
 }

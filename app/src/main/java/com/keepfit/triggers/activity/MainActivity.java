@@ -17,7 +17,7 @@ import com.keepfit.triggers.R;
 import com.keepfit.triggers.listener.PermissionResponseListener;
 import com.keepfit.triggers.service.TriggerService;
 import com.keepfit.triggers.listener.PermissionRequestListener;
-import com.keepfit.triggers.thread.DateThread;
+import com.keepfit.triggers.thread.CalendarThread;
 import com.keepfit.triggers.thread.LocationThread;
 import com.keepfit.triggers.thread.PointsOfInterestThread;
 import com.keepfit.triggers.thread.StepCounterThread;
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
         if (!fromNotification) {
             // Add new trigger threads here
             TriggerService.addThread(new TimeThread(this));
-            TriggerService.addThread(new DateThread(this));
+            TriggerService.addThread(new CalendarThread(this));
             TriggerService.addThread(new StepCounterThread(this));
             TriggerService.addThread(new WeatherThread(this, this));
             TriggerService.addThread(new LocationThread(this, this));
