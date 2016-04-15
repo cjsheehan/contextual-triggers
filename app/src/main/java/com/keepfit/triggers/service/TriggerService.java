@@ -349,7 +349,7 @@ public class TriggerService extends Service {
 
         if (!DataProcessor.isThereAnyCalendarEventInTheWay(twoHours, calendarEvents)) {
             if (!DataProcessor.isTheWeatherBad(weatherEvent)) {
-                if (DataProcessor.isLaterThan(Dates.getDateFromHours("11:00:00"))) {
+                if (DataProcessor.isLaterThan(11,0)) {
                     Notification.sendNotification(context, "You should go out!", "It's early, You don't have any " +
                             "calendar events and the weather is good :" + weatherEvent.getCurrentForecast()
                             .getSummary(), Scenario.THIRD);
@@ -381,7 +381,7 @@ public class TriggerService extends Service {
             thread.notifyWaitForFirst();
             return false;
         }
-        if (DataProcessor.isLaterThan(Dates.getDateFromHours("17:00:00"))) {
+        if (DataProcessor.isLaterThan(17,0)) {
             if (DataProcessor.isCompletenessLowerThan(70.0, stepCounterPercentage)) {
                 Notification.sendNotification(context, "MOVE!", "The day is almost over and your goal is not completed.", Scenario.FIRST);
                 notificationSent = true;
