@@ -65,25 +65,4 @@ public class Broadcast {
         intent.putExtra(ACTION, TriggerType.POI.id);
         context.sendBroadcast(intent);
     }
-
-    public static void broadcastUpdateForFirstScenario(Context context) {
-        Intent intent = new Intent(Scenario.FIRST.title);
-        intent.putExtra(ACTION, Scenario.FIRST.id);
-        intent.putExtra(IS_SCENARIO, true);
-        context.sendBroadcast(intent);
-    }
-
-    public static void broadcastUpdateForSecondScenario(Context context) {
-        Intent intent = new Intent(Scenario.SECOND.title);
-        intent.putExtra(ACTION, Scenario.SECOND.id);
-        intent.putExtra(IS_SCENARIO, true);
-        context.sendBroadcast(intent);
-    }
-
-    public static void broadcastUpdateForThirdScenario(Context context) {
-        Intent intent = new Intent(Scenario.THIRD.title);
-        intent.putExtra(ACTION, Scenario.THIRD.id);
-        intent.putExtra(IS_SCENARIO, true);
-        context.sendBroadcast(intent);
-    }
 }

@@ -51,8 +51,9 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
                 for (Scenario scenario : Scenario.values()) {
                     Notification notification = (Notification) bundle.get(scenario.title);
                     if (notification != null) {
-                        TriggerCache.put(scenario, null);
-                        Log.w(TAG, String.format("Removing %s from the cache.", notification));
+                        notification.setIsViewed(true);
+                        TriggerCache.put(scenario, notification);
+                        Log.w(TAG, String.format("Update %s in the cache.", notification));
                     }
                 }
             }

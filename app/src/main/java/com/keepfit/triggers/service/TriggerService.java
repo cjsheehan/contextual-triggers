@@ -17,8 +17,6 @@ import com.keepfit.triggers.thread.CalendarThread;
 import com.keepfit.triggers.thread.TriggerThread;
 import com.keepfit.triggers.utils.Broadcast;
 import com.keepfit.triggers.utils.DataProcessor;
-import com.keepfit.triggers.utils.Dates;
-import com.keepfit.triggers.utils.Extension;
 import com.keepfit.triggers.utils.TriggerCache;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.utils.enums.Scenario;
@@ -131,53 +129,53 @@ public class TriggerService extends Service {
 
         private static final int TIMEOUT = 2000;
         private final static int MAX_UPDATE_ATTEMPTS = 10;
-        private int firstUpdateAttempts, secondUpdateAttempts, thirdUpdateAttempts;
-        private boolean waitForFirst, waitForSecond, waitForThird;
+        private int stepPercentageUpdateAttempts, weatherUpdateAttempts, calendarEventsUpdateAttempts;
+        private boolean waitForStepPercentage, waitForWeather, waitForCalendarEvents;
 
         @Override
         public void doRunAction() {
-            if (waitForFirst) {
-                if (firstUpdateAttempts > MAX_UPDATE_ATTEMPTS) {
-                    Log.w(TAG, "First scenario has reached the max attempts.");
-                    waitForFirst = false;
-                    firstUpdateAttempts = 0;
+            if (waitForStepPercentage) {
+                if (stepPercentageUpdateAttempts > MAX_UPDATE_ATTEMPTS) {
+                    Log.w(TAG, "Step percentage scenario has reached the max attempts.");
+                    waitForStepPercentage = false;
+                    stepPercentageUpdateAttempts = 0;
                 } else {
                     sleep();
-                    firstUpdateAttempts++;
-                    if (checkFirstScenario()) {
+                    stepPercentageUpdateAttempts++;
+                    if (checkStepPercentageAtTime()) {
                         // Scenario was hit, so this is done
-                        waitForFirst = false;
-                        firstUpdateAttempts = 0;
+                        waitForStepPercentage = false;
+                        stepPercentageUpdateAttempts = 0;
                     }
                 }
             }
-            if (waitForSecond) {
-                if (secondUpdateAttempts > MAX_UPDATE_ATTEMPTS) {
-                    Log.w(TAG, "Second scenario has reached the max attempts.");
-                    waitForSecond = false;
-                    secondUpdateAttempts = 0;
+            if (waitForWeather) {
+                if (weatherUpdateAttempts > MAX_UPDATE_ATTEMPTS) {
+                    Log.w(TAG, "Weather scenario has reached the max attempts.");
+                    waitForWeather = false;
+                    weatherUpdateAttempts = 0;
                 } else {
                     sleep();
-                    secondUpdateAttempts++;
-                    if (checkSecondScenario()) {
+                    weatherUpdateAttempts++;
+                    if (checkForWeather()) {
                         // Scenario was hit, so this is done
-                        waitForSecond = false;
-                        secondUpdateAttempts = 0;
+                        waitForWeather = false;
+                        weatherUpdateAttempts = 0;
                     }
                 }
             }
-            if (waitForThird) {
-                if (thirdUpdateAttempts > MAX_UPDATE_ATTEMPTS) {
-                    Log.w(TAG, "Third scenario has reached the max attempts.");
-                    waitForThird = false;
-                    thirdUpdateAttempts = 0;
+            if (waitForCalendarEvents) {
+                if (calendarEventsUpdateAttempts > MAX_UPDATE_ATTEMPTS) {
+                    Log.w(TAG, "Calendar events scenario has reached the max attempts.");
+                    waitForCalendarEvents = false;
+                    calendarEventsUpdateAttempts = 0;
                 } else {
                     sleep();
-                    thirdUpdateAttempts++;
-                    if (checkThirdScenario()) {
+                    calendarEventsUpdateAttempts++;
+                    if (checkCalendarEvents()) {
                         // Scenario was hit, so this is done
-                        waitForThird = false;
-                        thirdUpdateAttempts = 0;
+                        waitForCalendarEvents = false;
+                        calendarEventsUpdateAttempts = 0;
                     }
                 }
             }
@@ -186,7 +184,7 @@ public class TriggerService extends Service {
         private void sleep() {
             try {
                 Thread.sleep(TIMEOUT);
-            } catch(InterruptedException e) {
+            } catch (InterruptedException e) {
                 Log.w(TAG, "Trigger Thread interrupted.", e);
             }
         }
@@ -197,7 +195,7 @@ public class TriggerService extends Service {
             for (TriggerThread thread : threads) {
                 thread.startThread();
             }
-            firstUpdateAttempts = secondUpdateAttempts = thirdUpdateAttempts = 0;
+            stepPercentageUpdateAttempts = weatherUpdateAttempts = calendarEventsUpdateAttempts = 0;
         }
 
         @Override
@@ -218,16 +216,16 @@ public class TriggerService extends Service {
             running = !pause;
         }
 
-        protected void notifyWaitForFirst() {
-            waitForFirst = true;
+        protected void notifyWaitForStepPercentage() {
+            waitForStepPercentage = true;
         }
 
-        protected void notifyWaitForSecond() {
-            waitForSecond = true;
+        protected void notifyWaitForWeather() {
+            waitForWeather = true;
         }
 
-        protected void notifyWaitForThird() {
-            waitForThird = true;
+        protected void notifyWaitForCalendarEvents() {
+            waitForCalendarEvents = true;
         }
 
     }
@@ -289,7 +287,8 @@ public class TriggerService extends Service {
 
     class TriggerReceiver extends BroadcastReceiver {
         @Override
-        public void onReceive(Context context, Intent intent) {;
+        public void onReceive(Context context, Intent intent) {
+            ;
             boolean isScenario = intent.getBooleanExtra(Broadcast.IS_SCENARIO, false);
             if (!isScenario) {
                 TriggerType triggerType = TriggerType.getById(intent.getIntExtra(Broadcast.ACTION, 0));
@@ -316,14 +315,17 @@ public class TriggerService extends Service {
             } else {
                 Scenario scenario = Scenario.getById(intent.getIntExtra(Broadcast.ACTION, 0));
                 switch (scenario) {
-                    case FIRST:
-                        checkFirstScenario();
+                    case STEP_PERCENTAGE:
+                        checkStepPercentageAtTime();
                         break;
-                    case SECOND:
-                        checkSecondScenario();
+                    case GOOD_WEATHER:
+                        checkForWeather();
                         break;
-                    case THIRD:
-                        checkThirdScenario();
+                    case BAD_WEATHER:
+                        checkForWeather();
+                        break;
+                    case NO_CALENDAR_EVENTS:
+                        checkCalendarEvents();
                         break;
                 }
             }
@@ -331,67 +333,67 @@ public class TriggerService extends Service {
     }
 
     private void checkScenarios() {
-        checkFirstScenario();
-        checkSecondScenario();
-        checkThirdScenario();
-        checkFourthScenario();
+        checkStepPercentageAtTime();
+        checkCalendarEvents();
+        checkForWeather();
     }
 
-    private boolean checkFourthScenario() {
-        Notification.sendNotification(context, "First", "This is the first message! Good job!!!!", Scenario.FIRST);
-        Notification.sendNotification(context, "Second", "This is the second message! Good job!!!!", Scenario.SECOND);
-        Notification.sendNotification(context, "Third", "This is the third message! Good job!!!!", Scenario.THIRD);
+    private boolean checkForWeather() {
+        WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
+        Double stepCounterPercentage = TriggerCache.get(TriggerType.STEP_COUNTER, Double.class);
+        if (weatherEvent == null || stepCounterPercentage == null) {
+            thread.notifyWaitForWeather();
+            return false;
+        }
+        if (DataProcessor.isTheWeatherBad(weatherEvent) && DataProcessor.isCompletenessLowerThan(30.0,
+                stepCounterPercentage)) {
+            Notification.sendNotification(context, "Bad weather!",
+                    String.format("The weather is not too great: %s.\nYou should go to the gym, or do something " +
+                            "inside.", weatherEvent
+                            .getCurrentForecast().getSummary()), Scenario.BAD_WEATHER);
+
+        } else {
+            Notification.sendNotification(context, "You should go out!", String.format("The weather is good: %s.\n " +
+                    "You should go out and do something!", weatherEvent.getCurrentForecast().getSummary()), Scenario
+                    .GOOD_WEATHER);
+        }
+        notificationSent = true;
         return true;
     }
 
-    private boolean checkThirdScenario() {
+    private boolean checkCalendarEvents() {
         long twoHours = 2 * 60 * 60 * 1000;
 
         ArrayList<KeepFitCalendarEvent> calendarEvents = (ArrayList<KeepFitCalendarEvent>) TriggerCache.get
                 (TriggerType.CALENDAR);
         WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
         if (weatherEvent == null || calendarEvents == null) {
-            thread.notifyWaitForThird();
+            thread.notifyWaitForCalendarEvents();
             return false;
         }
 
         if (!DataProcessor.isThereAnyCalendarEventInTheWay(twoHours, calendarEvents)) {
             if (!DataProcessor.isTheWeatherBad(weatherEvent)) {
-                if (DataProcessor.isLaterThan(11,0)) {
+                if (DataProcessor.isLaterThan(11, 0)) {
                     Notification.sendNotification(context, "You should go out!", "It's early, You don't have any " +
                             "calendar events and the weather is good :" + weatherEvent.getCurrentForecast()
-                            .getSummary(), Scenario.THIRD);
+                            .getSummary(), Scenario.NO_CALENDAR_EVENTS);
                 }
             }
         }
         return true;
     }
 
-    private boolean checkSecondScenario() {
-        WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
-        Double stepCounterPercentage = TriggerCache.get(TriggerType.STEP_COUNTER, Double.class);
-        if (weatherEvent == null || stepCounterPercentage == null) {
-            thread.notifyWaitForSecond();
-            return false;
-        }
-        if (!DataProcessor.isTheWeatherBad(weatherEvent) && DataProcessor.isCompletenessLowerThan(30.0,
-                stepCounterPercentage)) {
-            Notification.sendNotification(context, "You should go out!", "The weather is good :" + weatherEvent
-                    .getCurrentForecast().getSummary(), Scenario.SECOND);
-            notificationSent = true;
-        }
-        return true;
-    }
-
-    private boolean checkFirstScenario() {
+    private boolean checkStepPercentageAtTime() {
         Double stepCounterPercentage = TriggerCache.get(TriggerType.STEP_COUNTER, Double.class);
         if (stepCounterPercentage == null) {
-            thread.notifyWaitForFirst();
+            thread.notifyWaitForStepPercentage();
             return false;
         }
-        if (DataProcessor.isLaterThan(17,0)) {
+        if (DataProcessor.isLaterThan(17, 0)) {
             if (DataProcessor.isCompletenessLowerThan(70.0, stepCounterPercentage)) {
-                Notification.sendNotification(context, "MOVE!", "The day is almost over and your goal is not completed.", Scenario.FIRST);
+                Notification.sendNotification(context, "MOVE!", "The day is almost over and your goal is not " +
+                        "completed.", Scenario.STEP_PERCENTAGE);
                 notificationSent = true;
             }
         }
