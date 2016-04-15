@@ -1,9 +1,11 @@
 package com.keepfit.triggers.utils.enums;
 
+import java.io.Serializable;
+
 /**
  * Created by Edward on 4/14/2016.
  */
-public enum Scenario {
+public enum Scenario implements Serializable {
     FIRST(1, "first"),
     SECOND(2, "second"),
     THIRD(3, "third");

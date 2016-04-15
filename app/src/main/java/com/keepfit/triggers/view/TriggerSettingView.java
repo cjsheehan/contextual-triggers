@@ -61,7 +61,6 @@ public class TriggerSettingView extends LinearLayout {
         txtTitle = (TextView) findViewById(R.id.txt_title);
         txtInfo = (TextView) findViewById(R.id.txt_info);
 
-
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
         preferenceKey = thread.getName() + "_checked";
         boolean checked = prefs.getBoolean(preferenceKey, false);

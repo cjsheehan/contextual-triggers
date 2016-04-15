@@ -63,7 +63,6 @@ public class StepCounterThread extends TriggerThread<Double> implements SensorEv
                 SensorManager.SENSOR_DELAY_FASTEST);
 
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
     }
 
     @Override

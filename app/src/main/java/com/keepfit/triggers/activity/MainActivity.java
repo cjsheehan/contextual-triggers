@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,6 +16,7 @@ import android.widget.Toast;
 
 import com.keepfit.triggers.R;
 import com.keepfit.triggers.listener.PermissionResponseListener;
+import com.keepfit.triggers.notification.Notification;
 import com.keepfit.triggers.service.TriggerService;
 import com.keepfit.triggers.listener.PermissionRequestListener;
 import com.keepfit.triggers.thread.CalendarThread;
@@ -24,6 +26,8 @@ import com.keepfit.triggers.thread.StepCounterThread;
 import com.keepfit.triggers.thread.TimeThread;
 import com.keepfit.triggers.thread.TriggerThread;
 import com.keepfit.triggers.thread.WeatherThread;
+import com.keepfit.triggers.utils.TriggerCache;
+import com.keepfit.triggers.utils.enums.Scenario;
 import com.keepfit.triggers.view.TriggerSettingView;
 
 public class MainActivity extends AppCompatActivity implements PermissionRequestListener {
@@ -43,6 +47,15 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
         if (getIntent().getExtras() != null) {
             Bundle bundle = getIntent().getExtras();
             fromNotification = bundle.getBoolean("isNotification");
+            if (fromNotification) {
+                for (Scenario scenario : Scenario.values()) {
+                    Notification notification = (Notification) bundle.get(scenario.title);
+                    if (notification != null) {
+                        TriggerCache.put(scenario, null);
+                        Log.w(TAG, String.format("Removing %s from the cache.", notification));
+                    }
+                }
+            }
         }
         initialize();
     }

@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.keepfit.triggers.interests.Item;
 import com.keepfit.triggers.interests.Results;
+import com.keepfit.triggers.notification.Notification;
 import com.keepfit.triggers.thread.BaseThread;
 import com.keepfit.triggers.thread.CalendarThread;
 import com.keepfit.triggers.thread.TriggerThread;
@@ -19,9 +20,9 @@ import com.keepfit.triggers.utils.DataProcessor;
 import com.keepfit.triggers.utils.Dates;
 import com.keepfit.triggers.utils.Extension;
 import com.keepfit.triggers.utils.TriggerCache;
+import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.utils.enums.Scenario;
 import com.keepfit.triggers.utils.enums.TriggerType;
-import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.weather.Forecast;
 import com.keepfit.triggers.weather.WeatherEvent;
 
@@ -253,16 +254,6 @@ public class TriggerService extends Service {
     private void handleWeatherReceived(Intent intent) {
         WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
         Forecast forecast = weatherEvent.getCurrentForecast();
-        Extension.sendNotification(context, "WEATHER", String.format("Summary: %s; Temp: %s; precipProb: %s; Lat: %s;" +
-                        " Long: %s; ",
-                forecast.getSummary(),
-                forecast.getTemperature(),
-                forecast.getPrecipProbability(),
-                forecast.getLatitude(),
-                forecast.getLongitude()));
-        Extension.sendNotification(context, "WEATHER", String.format("Lat: %s; Long: %s; TZ: %s; Off: %s",
-                weatherEvent.getLatitude(), weatherEvent.getLongitude(), weatherEvent.getTimezone(), weatherEvent
-                        .getOffset()));
     }
 
     private void handlePointsOfInterestReceived(Intent intent) {
@@ -281,10 +272,7 @@ public class TriggerService extends Service {
                     item[0].getPosition()[0],
                     item[0].getPosition()[1]);
 
-            Extension.sendNotification(context, "POI", info + " : " + poi);
         } else {
-            Extension.sendNotification(context, "POI", String.format("No poi available for Lat: %s Long: %s",
-                    poiEvent.getSourceLatitude(), poiEvent.getSourceLongitude()));
         }
     }
 
@@ -362,9 +350,9 @@ public class TriggerService extends Service {
         if (!DataProcessor.isThereAnyCalendarEventInTheWay(twoHours, calendarEvents)) {
             if (!DataProcessor.isTheWeatherBad(weatherEvent)) {
                 if (DataProcessor.isLaterThan(Dates.getDateFromHours("11:00:00"))) {
-                    Extension.sendNotification(context, "You should go out!", "It's early, You don't have any " +
+                    Notification.sendNotification(context, "You should go out!", "It's early, You don't have any " +
                             "calendar events and the weather is good :" + weatherEvent.getCurrentForecast()
-                            .getSummary());
+                            .getSummary(), Scenario.THIRD);
                 }
             }
         }
@@ -380,8 +368,8 @@ public class TriggerService extends Service {
         }
         if (!DataProcessor.isTheWeatherBad(weatherEvent) && DataProcessor.isCompletenessLowerThan(30.0,
                 stepCounterPercentage)) {
-            Extension.sendNotification(context, "You should go out!", "The weather is good :" + weatherEvent
-                    .getCurrentForecast().getSummary());
+            Notification.sendNotification(context, "You should go out!", "The weather is good :" + weatherEvent
+                    .getCurrentForecast().getSummary(), Scenario.SECOND);
             notificationSent = true;
         }
         return true;
@@ -395,7 +383,7 @@ public class TriggerService extends Service {
         }
         if (DataProcessor.isLaterThan(Dates.getDateFromHours("17:00:00"))) {
             if (DataProcessor.isCompletenessLowerThan(70.0, stepCounterPercentage)) {
-                Extension.sendNotification(context, "MOVE!", "The day is almost over and your goal is not completed.");
+                Notification.sendNotification(context, "MOVE!", "The day is almost over and your goal is not completed.", Scenario.FIRST);
                 notificationSent = true;
             }
         }

@@ -23,7 +23,7 @@ import java.util.List;
  */
 public class CalendarThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     private static final String TAG = "CalendarThread";
-    private static final String TITLE = "Date";
+    private static final String TITLE = "Calendar";
 
     public ArrayList<KeepFitCalendarEvent> events = new ArrayList<>();
 

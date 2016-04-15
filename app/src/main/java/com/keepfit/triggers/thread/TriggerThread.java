@@ -24,10 +24,6 @@ public abstract class TriggerThread<T> extends BaseThread {
         txtDisplay = textView;
     }
 
-    protected void sendNotification() {
-        Extension.sendNotification(context, getTitle(), getMessage());
-    }
-
     public TriggerType getTriggerType() {
         return triggerType;
     }
