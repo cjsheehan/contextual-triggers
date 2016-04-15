@@ -334,6 +334,14 @@ public class TriggerService extends Service {
         checkFirstScenario();
         checkSecondScenario();
         checkThirdScenario();
+        checkFourthScenario();
+    }
+
+    private boolean checkFourthScenario() {
+        Notification.sendNotification(context, "First", "This is the first message! Good job!!!!", Scenario.FIRST);
+        Notification.sendNotification(context, "Second", "This is the second message! Good job!!!!", Scenario.SECOND);
+        Notification.sendNotification(context, "Third", "This is the third message! Good job!!!!", Scenario.THIRD);
+        return true;
     }
 
     private boolean checkThirdScenario() {

@@ -67,13 +67,18 @@ public class Notification implements Serializable {
 
         // Multiple notifications, so make it expanded
         if (notifications.size() > 1) {
-            NotificationCompat.InboxStyle inboxStyle =
-                    new NotificationCompat.InboxStyle();
-            inboxStyle.setBigContentTitle("Trigger Scenarios");
-            for (Notification n : notifications) {
-                inboxStyle.addLine(n.getMessage());
+            NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int i = 0; i < notifications.size(); i++) {
+                Notification n = notifications.get(i);
+                stringBuilder.append(n.getMessage());
+                if (i != notifications.size() - 1)
+                    stringBuilder.append("\n");
             }
-            builder.setStyle(inboxStyle);
+            bigTextStyle.setBigContentTitle("Trigger Scenarios");
+            bigTextStyle.bigText(stringBuilder.toString());
+            bigTextStyle.setSummaryText("You have hit some triggers!");
+            builder.setStyle(bigTextStyle);
         }
 
         builder.setContentIntent(PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT));
