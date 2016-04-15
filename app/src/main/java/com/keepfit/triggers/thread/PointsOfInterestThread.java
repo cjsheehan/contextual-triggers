@@ -80,8 +80,7 @@ public class PointsOfInterestThread extends TriggerThread<Results> implements Re
     @Override
     public void onResponse(Results response) {
         if(response != null) {
-            poiEvent = response;
-            TriggerCache.put(TriggerType.POI, poiEvent);
+            TriggerCache.put(TriggerType.POI, response);
         }
     }
 

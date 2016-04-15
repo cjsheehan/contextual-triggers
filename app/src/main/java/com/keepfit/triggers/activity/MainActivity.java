@@ -154,8 +154,13 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
 
     @Override
     public void onStop() {
-        stopService(serviceIntent);
         super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        stopService(serviceIntent);
+        super.onDestroy();
     }
 
 

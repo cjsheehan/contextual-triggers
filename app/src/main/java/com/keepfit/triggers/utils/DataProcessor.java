@@ -1,5 +1,8 @@
 package com.keepfit.triggers.utils;
 
+import android.location.Location;
+
+import com.keepfit.triggers.interests.Item;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.weather.Forecast;
 import com.keepfit.triggers.weather.WeatherEvent;
@@ -14,27 +17,31 @@ import java.util.List;
 public class DataProcessor {
 
 
-    public static boolean isThereAnyCalendarEventInTheWay(long differenceParam, List<KeepFitCalendarEvent> calendarEvents){
+    public static boolean isThereAnyCalendarEventInTheWay(long differenceParam, List<KeepFitCalendarEvent>
+            calendarEvents) {
         for (KeepFitCalendarEvent event : calendarEvents) {
-            long startDifference = Math.abs(event.getStart().getTime() - new Date(System.currentTimeMillis()).getTime());
+            long startDifference = Math.abs(event.getStart().getTime() - new Date(System.currentTimeMillis()).getTime
+                    ());
             long endDifference = Math.abs(event.getEnd().getTime() - new Date(System.currentTimeMillis()).getTime());
-            if (startDifference < differenceParam || endDifference < differenceParam){
+            if (startDifference < differenceParam || endDifference < differenceParam) {
                 System.out.println("Annoying calendar event found: " + event.getName());
                 return true;
             }
         }
         System.out.println("There are no annoying calendar events");
         return false;
-    };
+    }
 
-    public static boolean isLaterThan(int hourOfDay, int minute){
+    ;
+
+    public static boolean isLaterThan(int hourOfDay, int minute) {
         Calendar today = Calendar.getInstance();
         today.set(Calendar.HOUR_OF_DAY, hourOfDay);
         today.set(Calendar.MINUTE, minute);
         today.set(Calendar.SECOND, 0);
 
         Date currentTime = new Date(System.currentTimeMillis());
-        if (currentTime.getTime()>today.getTime().getTime()){
+        if (currentTime.getTime() > today.getTime().getTime()) {
             System.out.println("The current time is: " + currentTime.getTime() + " later than " + today.getTime());
             return true;
         }
@@ -42,22 +49,39 @@ public class DataProcessor {
         return false;
     }
 
-    public static boolean isCompletenessLowerThan(double percentage, double completenessPercentage){
-        if (completenessPercentage< percentage){
-            System.out.println("The dailiy step goal completeness is: " + completenessPercentage + " lower than " + percentage);
+    public static boolean isCompletenessLowerThan(double percentage, double completenessPercentage) {
+        if (completenessPercentage < percentage) {
+            System.out.println("The dailiy step goal completeness is: " + completenessPercentage + " lower than " +
+                    percentage);
             return true;
         }
-        System.out.println("The dailiy step goal completeness is: " + completenessPercentage + " larger than " + percentage);
+        System.out.println("The dailiy step goal completeness is: " + completenessPercentage + " larger than " +
+                percentage);
         return false;
     }
 
-    public static boolean isTheWeatherBad(WeatherEvent weatherEvent){
-        Forecast currentForecast =  weatherEvent.getCurrentForecast();
-        if(currentForecast.getTemperature()<40.0)
+    public static boolean isTheWeatherBad(WeatherEvent weatherEvent) {
+        Forecast currentForecast = weatherEvent.getCurrentForecast();
+        if (currentForecast.getTemperature() < 40.0)
             return true;
-        if(currentForecast.getPrecipProbability()>0.8)
+        if (currentForecast.getPrecipProbability() > 0.8)
             return true;
         return false;
+    }
+
+    public static boolean checkPointOfInterestNearLocation(Item pointOfInterest, Location location) {
+        // TODO Double check these with the api
+        double pointLat = Double.parseDouble(pointOfInterest.getPosition()[0]);
+        double pointLong = Double.parseDouble(pointOfInterest.getPosition()[0]);
+
+        // Create a new location for the point of interest by copying the current location
+        Location pointLocation = new Location(location);
+        pointLocation.setLatitude(pointLat);
+        pointLocation.setLongitude(pointLong);
+
+        float distanceTo = location.distanceTo(location);
+
+        return distanceTo < 50;
     }
 
 }

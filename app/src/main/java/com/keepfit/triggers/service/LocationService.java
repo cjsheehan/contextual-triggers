@@ -1,6 +1,7 @@
 package com.keepfit.triggers.service;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -27,7 +28,6 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.keepfit.triggers.listener.PermissionRequestListener;
 import com.keepfit.triggers.listener.PermissionResponseListener;
-import com.keepfit.triggers.service.GeofenceTransitionsIntentService;
 import com.keepfit.triggers.utils.enums.TriggerPreference;
 
 import java.io.IOException;
@@ -130,35 +130,38 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
         Log.d(TAG, "GEOFENCES WORKED!!! " + status);
     }
 
+    private Bundle connectionHint;
     @Override
     public void onConnected(Bundle connectionHint) {
+        this.connectionHint = connectionHint;
         if (disableGeofences) return;
-        handleConnection();
-        connectionCallbacks.onConnected(connectionHint);
+        setupLocation();
     }
 
     private boolean connectionPermissionGranted;
 
-    private void handleConnection() {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission
-                .ACCESS_FINE_LOCATION) != PackageManager
-                .PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission
-                .ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            listener.notifyPermissionRequested(new PermissionResponseListener() {
-                @Override
-                public void permissionGranted(Location location) {
-                    connectionPermissionGranted = true;
-                    handleConnection();
-                }
+    public void setupLocation() {
+        if (!connectionPermissionGranted) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission
+                    .ACCESS_FINE_LOCATION) != PackageManager
+                    .PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission
+                    .ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                listener.notifyPermissionRequested(new PermissionResponseListener() {
+                    @Override
+                    public void permissionGranted(Location location) {
+                        connectionPermissionGranted = true;
+                        setupLocation();
+                    }
 
-                @Override
-                public void permissionDenied() {
-                    connectionPermissionGranted = false;
-                }
-            });
-            return;
-        } else {
-            connectionPermissionGranted = true;
+                    @Override
+                    public void permissionDenied() {
+                        connectionPermissionGranted = false;
+                    }
+                });
+                return;
+            } else {
+                connectionPermissionGranted = true;
+            }
         }
         lastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 googleApiClient);
@@ -173,6 +176,10 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
         );
 
         GeofencingRequest request = createGeoFences();
+        if (request == null) {
+            connectionCallbacks.onConnectionSuspended(0);
+            return;
+        }
         geofencePendingIntent = getGeofencePendingIntent();
 
         LocationServices.GeofencingApi.addGeofences(
@@ -180,6 +187,8 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
                 request,
                 geofencePendingIntent
         ).setResultCallback(this);
+
+        connectionCallbacks.onConnected(connectionHint);
     }
 
     @Override
@@ -194,7 +203,7 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
 
     @Override
     public void onLocationChanged(Location location) {
-        Toast.makeText(context, "location :" + location.getLatitude() + " , " + location.getLongitude(), Toast
+        Toast.makeText(context, "Found your location: " + location.getLatitude() + " , " + location.getLongitude(), Toast
                 .LENGTH_SHORT).show();
     }
 
@@ -209,6 +218,18 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
         geoFences.add(createGeoFence(homeLat, homeLong, HOME_KEY));
         geoFences.add(createGeoFence(workLat, workLong, WORK_KEY));
         geoFences.add(createGeoFence(customLat, customLong, CUSTOM_KEY));
+
+        boolean geofencesCreated = false;
+        for (Geofence g : geoFences) {
+            if (g != null) {
+                geofencesCreated = true;
+                break;
+            }
+        }
+        if (!geofencesCreated) {
+            Log.w(TAG, "No geofences were created.");
+            return null;
+        }
 
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
         builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL);

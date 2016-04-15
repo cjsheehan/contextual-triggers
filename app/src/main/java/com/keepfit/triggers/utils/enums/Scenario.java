@@ -9,7 +9,8 @@ public enum Scenario implements Serializable {
     STEP_PERCENTAGE(1, "stePercentage"),
     NO_CALENDAR_EVENTS(2, "noCalendarEvents"),
     GOOD_WEATHER(3, "goodWeather"),
-    BAD_WEATHER(3, "badWeather");
+    BAD_WEATHER(3, "badWeather"),
+    POI(4, "poi");
 
     public int id;
     public String title;

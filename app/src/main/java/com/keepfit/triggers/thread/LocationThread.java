@@ -3,8 +3,11 @@ package com.keepfit.triggers.thread;
 import android.content.Context;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.vision.barcode.Barcode;
 import com.keepfit.triggers.listener.PermissionRequestListener;
 import com.keepfit.triggers.listener.PermissionResponseListener;
 import com.keepfit.triggers.service.LocationService;
@@ -20,7 +23,7 @@ public class LocationThread extends TriggerThread<Object> {
     private static final String TITLE = "Location";
 
     private LocationService locationService;
-    private boolean waitForLocation = false;
+    private boolean waitForSetup = false, waitForLocation = false;
 
     public LocationThread(Context context, PermissionRequestListener listener) {
         super(TITLE, TriggerType.LOCATION, false, context);
@@ -45,6 +48,9 @@ public class LocationThread extends TriggerThread<Object> {
                 }
             });
         }
+        if (waitForSetup) {
+            locationService.setupLocation();
+        }
     }
 
     @Override
@@ -57,13 +63,30 @@ public class LocationThread extends TriggerThread<Object> {
 
             @Override
             public void onConnectionSuspended(int i) {
-
+                Toast.makeText(context, "No locations have been setup. Please go into Settings > Locations and " +
+                        "enable and define at least one location.", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
+    public Barcode.GeoPoint getLocationFromAddress(String address) {
+        if (!isRunning()) {
+            Log.w(TAG, "LocationTrigger is not running.");
+            return null;
+        }
+        return locationService.getLocationFromAddress(address);
+    }
+
+    public void requestLocation(PermissionResponseListener listener) {
+        locationService.requestLocation(listener);
+    }
+
     public void updateLocation() {
         waitForLocation = true;
+    }
+
+    public boolean hasLocation() {
+        return !waitForLocation;
     }
 
     @Override

@@ -73,7 +73,7 @@ public class Notification implements Serializable {
             if (i != notifications.size() - 1)
                 stringBuilder.append("\n");
         }
-        bigTextStyle.setBigContentTitle("Trigger Scenarios");
+        bigTextStyle.setBigContentTitle(notifications.size() == 1 ? notification.getTitle() : "Trigger Scenarios");
         bigTextStyle.bigText(stringBuilder.toString());
         bigTextStyle.setSummaryText("You have hit some triggers!");
         builder.setStyle(bigTextStyle);

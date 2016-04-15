@@ -3,13 +3,13 @@
 
 
     <EditTextPreference
-    android:defaultValue="Daily Goal"
+    android:defaultValue="Click here to set your daily goal."
     android:inputType="numberDecimal"
     android:key="step_length"
     android:maxLines="1"
     android:selectAllOnFocus="true"
     android:singleLine="true"
-    android:title="dailyGoal" />
+    android:title="Daily Goal" />
 
     <!--<SwitchPreference-->
         <!--android:defaultValue="false"-->

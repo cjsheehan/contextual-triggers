@@ -3,6 +3,7 @@ package com.keepfit.triggers.activity;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -27,7 +28,10 @@ import com.keepfit.triggers.R;
 import com.keepfit.triggers.listener.PermissionRequestListener;
 import com.keepfit.triggers.listener.PermissionResponseListener;
 import com.keepfit.triggers.service.LocationService;
+import com.keepfit.triggers.service.TriggerService;
+import com.keepfit.triggers.thread.LocationThread;
 import com.keepfit.triggers.utils.enums.TriggerPreference;
+import com.keepfit.triggers.utils.enums.TriggerType;
 
 import java.util.List;
 
@@ -191,7 +195,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class HistoryPreferenceFragment extends PreferenceFragment implements PermissionRequestListener {
 
-        private LocationService locationService;
         PermissionResponseListener permissionResponseListener;
 
         Preference homeCurrentLocationButton;
@@ -206,8 +209,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_history_settings);
             setHasOptionsMenu(true);
-
-            locationService = new LocationService(getActivity(), this, true);
 
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
@@ -289,7 +290,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
 
         private void setCurrentLocationForPreference(final Preference longitude, final Preference latitude) {
-            locationService.requestLocation(new PermissionResponseListener() {
+            LocationThread locationThread = ((LocationThread) TriggerService.getTrigger(TriggerType.LOCATION));
+            if (!locationThread.isRunning()) {
+                Toast.makeText(null, "You need to have locations enabled to use this feature.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            locationThread.requestLocation(new PermissionResponseListener() {
                 @Override
                 public void permissionGranted(Location location) {
                     updatePreference(longitude, String.valueOf(location.getLongitude()));
@@ -298,14 +304,19 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
                 @Override
                 public void permissionDenied() {
-
+                    Toast.makeText(getActivity(), "You need to have the Location permission to use this feature.", Toast.LENGTH_SHORT).show();
                 }
             });
         }
 
         private void setCurrentLocationForPreferenceFromAddress(Preference addressPreference, String address, final
         Preference longitude, final Preference latitude) {
-            Barcode.GeoPoint point = locationService.getLocationFromAddress(address);
+            LocationThread locationThread = ((LocationThread) TriggerService.getTrigger(TriggerType.LOCATION));
+            if (!locationThread.isRunning()) {
+                Toast.makeText(null, "You need to have locations enabled to use this feature.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Barcode.GeoPoint point = locationThread.getLocationFromAddress(address);
             if (point == null) {
                 Toast.makeText(getActivity(), "Could not find location for the address: " + address, Toast
                         .LENGTH_SHORT).show();
@@ -327,28 +338,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         @Override
         public void onStart() {
-            locationService.connect(new GoogleApiClient.ConnectionCallbacks() {
-                @Override
-                public void onConnected(Bundle bundle) {
-//                    homeCurrentLocationButton.setEnabled(true);
-//                    workCurrentLocationButton.setEnabled(true);
-//                    customCurrentLocationButton.setEnabled(true);
-//                    homeAddress.setEnabled(true);
-//                    workAddress.setEnabled(true);
-//                    customAddress.setEnabled(true);
-                }
-
-                @Override
-                public void onConnectionSuspended(int i) {
-
-                }
-            });
+            LocationThread locationThread = ((LocationThread) TriggerService.getTrigger(TriggerType.LOCATION));
+            if (!locationThread.isRunning()) {
+                Toast.makeText(getActivity(), "You need to have Locations enabled for this feature", Toast.LENGTH_SHORT).show();
+            }
             super.onStart();
         }
 
         @Override
         public void onStop() {
-            locationService.disconnect();
             super.onStop();
         }
 
