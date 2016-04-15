@@ -6,9 +6,10 @@ import java.io.Serializable;
  * Created by Edward on 4/14/2016.
  */
 public enum Scenario implements Serializable {
-    FIRST(1, "first"),
-    SECOND(2, "second"),
-    THIRD(3, "third");
+    STEP_PERCENTAGE(1, "stePercentage"),
+    NO_CALENDAR_EVENTS(2, "noCalendarEvents"),
+    GOOD_WEATHER(3, "goodWeather"),
+    BAD_WEATHER(3, "badWeather");
 
     public int id;
     public String title;

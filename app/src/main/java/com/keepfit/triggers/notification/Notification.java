@@ -65,16 +65,18 @@ public class Notification implements Serializable {
             intent.putExtra(cachedNotification.getScenario().title, cachedNotification);
         }
 
-        // Multiple notifications, so make it expanded
-        if (notifications.size() > 1) {
-            NotificationCompat.InboxStyle inboxStyle =
-                    new NotificationCompat.InboxStyle();
-            inboxStyle.setBigContentTitle("Trigger Scenarios");
-            for (Notification n : notifications) {
-                inboxStyle.addLine(n.getMessage());
-            }
-            builder.setStyle(inboxStyle);
+        NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < notifications.size(); i++) {
+            Notification n = notifications.get(i);
+            stringBuilder.append(n.getMessage());
+            if (i != notifications.size() - 1)
+                stringBuilder.append("\n");
         }
+        bigTextStyle.setBigContentTitle("Trigger Scenarios");
+        bigTextStyle.bigText(stringBuilder.toString());
+        bigTextStyle.setSummaryText("You have hit some triggers!");
+        builder.setStyle(bigTextStyle);
 
         builder.setContentIntent(PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT));
         builder.setAutoCancel(true);
@@ -104,6 +106,10 @@ public class Notification implements Serializable {
 
     public boolean isViewed() {
         return isViewed;
+    }
+
+    public void setIsViewed(boolean isViewed) {
+        this.isViewed = isViewed;
     }
 
     @Override
