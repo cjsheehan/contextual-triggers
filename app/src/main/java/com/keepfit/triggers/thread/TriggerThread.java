@@ -15,8 +15,8 @@ public abstract class TriggerThread<T> extends BaseThread {
     protected TriggerType triggerType;
     protected TextView txtDisplay;
 
-    public TriggerThread(String name, TriggerType triggerType, boolean enabled, int timeout, Context context) {
-        super(name, enabled, timeout, context);
+    public TriggerThread(String name, TriggerType triggerType, boolean enabled, Context context) {
+        super(name, enabled, context);
         this.triggerType = triggerType;
     }
 

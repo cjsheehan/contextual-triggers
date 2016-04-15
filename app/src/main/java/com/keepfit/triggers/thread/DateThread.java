@@ -32,7 +32,7 @@ public class DateThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     public static ArrayList<String> descriptions = new ArrayList<>();
 
     public DateThread(Context context) {
-        super(TITLE, TriggerType.CALENDAR, false, TIMEOUT, context);
+        super(TITLE, TriggerType.CALENDAR, false, context);
     }
 
     boolean sent = false;
@@ -47,8 +47,7 @@ public class DateThread extends TriggerThread<List<KeepFitCalendarEvent>> {
             String selection = "(( " + CalendarContract.Events.DTSTART + " >= " + startDate.getTimeInMillis() + " ) AND ( " + CalendarContract.Events.DTSTART + " <= " + endDate.getTimeInMillis() + " ))";
 
 
-            Cursor cursor = null;
-            cursor = context.getContentResolver()
+            Cursor cursor = context.getContentResolver()
                     .query(
                             Uri.parse("content://com.android.calendar/events"),
                             new String[]{"calendar_id", "title", "description",
@@ -92,6 +91,7 @@ public class DateThread extends TriggerThread<List<KeepFitCalendarEvent>> {
 //        }
             if (!sent) {
                 Broadcast.broadcastCalendarEvents(context, events);
+
                 sent = true;
             }
         }
@@ -129,5 +129,10 @@ public class DateThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     @Override
     protected String getMessage() {
         return String.format("You reached the goal for the date!");
+    }
+
+    @Override
+    protected int getTimeout() {
+        return TIMEOUT;
     }
 }

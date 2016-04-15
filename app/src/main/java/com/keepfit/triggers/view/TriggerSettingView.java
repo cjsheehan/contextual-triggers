@@ -86,13 +86,12 @@ public class TriggerSettingView extends LinearLayout {
             @Override
             public void onClick(View v) {
                 checkbox.setChecked(!checkbox.isChecked());
-                doCheckAction(checkbox.isChecked());
             }
         });
     }
 
     private void doCheckAction(boolean isChecked) {
-        thread.pauseThread(isChecked);
+        thread.pauseThread(!isChecked);
         thread.setEnabled(isChecked);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean(preferenceKey, isChecked);

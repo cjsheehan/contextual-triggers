@@ -9,21 +9,21 @@ import android.util.Log;
 public abstract class BaseThread extends Thread implements IThread {
     private static final String TAG = "BaseThread";
 
-    private boolean started, running, enabled;
+    private boolean started, running, paused, enabled;
 
     protected Context context;
-    private int timeout;
 
-    public BaseThread(String name) { this(name, true, 1000, null); }
+    public BaseThread(String name) { this(name, true, null); }
 
-    public BaseThread(String name, boolean enabled, int timeout, Context context) {
+    public BaseThread(String name, boolean enabled, Context context) {
         super(name);
         started = false;
         running = false;
         this.enabled = enabled;
-        this.timeout = timeout;
         this.context = context;
     }
+
+    protected abstract int getTimeout();
 
     /**
      * Run the thread.
@@ -32,10 +32,11 @@ public abstract class BaseThread extends Thread implements IThread {
     public void run() {
         while (running) {
             try {
-                Thread.sleep(timeout);
+                Thread.sleep(getTimeout());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            if (paused || !enabled) continue;
             doRunAction();
         }
     }
@@ -86,7 +87,7 @@ public abstract class BaseThread extends Thread implements IThread {
      */
     @Override
     public void pauseThread(boolean pause) {
-        running = pause;
+        paused = pause;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.keepfit.triggers.weather;
+package com.keepfit.triggers.service;
 
 import android.content.Context;
 import android.util.Log;
@@ -10,33 +10,36 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
+import com.keepfit.triggers.interests.PointsOfInterestResponse;
+import com.keepfit.triggers.interests.Results;
 import com.keepfit.triggers.listener.ResponseListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Chris on 10/04/2016.
+ * Created by Chris on 12/04/2016.
  */
-public class WeatherService {
-    private static final String TAG = "WeatherService";
-    private static final String FORECAST_IO_URL = "https://api.forecast.io/forecast/";
-    private static final String FORECAST_IO_KEY = "a991d862d6211132d233ebc988081823";
+public class PointsOfInterestService {
+    private static final String TAG = "PointsOfInterestService";
+
+    private static final String URL = "https://places.cit.api.here.com/places/v1/discover/explore?at=";
+    private static final String KEY = "&app_id=9Dgt6MxRPvpgfwpUwmKX&app_code=xIM0Lg2YP8qKNjWJF9bHJw";
 
     private Context context;
     private RequestQueue queue = null;
     int maxReq = 10;
     int numReq = 0;
-    private List<ResponseListener<WeatherEvent>> listeners;
+    private List<ResponseListener<Results>> listeners;
 
-    public WeatherService(Context context) {
+    public PointsOfInterestService(Context context) {
         this.context = context;
         listeners = new ArrayList<>();
     }
 
-    public void requestWeather(double lat, double lon) {
+    public void requestPointsOfInterest(final double lat, final double lon) {
         String url = formatRequest(lat, lon);
-        Log.d(TAG, "WeatherService request url=" + url);
+        Log.d(TAG, "PointsOfInterestService request url=" + url);
 
         // Instantiate the RequestQueue.
         if (queue == null) {
@@ -49,16 +52,19 @@ public class WeatherService {
 
         if (numReq <= maxReq) {
             // Only request
-            StringRequest stringRequest = null;
+            StringRequest stringRequest;
             try {
                 stringRequest = new StringRequest(Request.Method.GET, url,
                         new Response.Listener<String>() {
                             @Override
                             public void onResponse(String response) {
                                 Gson gson = new Gson();
-                                WeatherEvent event = gson.fromJson(response, WeatherEvent.class);
+                                PointsOfInterestResponse results = gson.fromJson(response, PointsOfInterestResponse.class);
+                                Results poiResults = results.getResults();
+                                poiResults.setSourceLatitude(lat);
+                                poiResults.setSourceLongitude(lon);
                                 for (ResponseListener listener : listeners)
-                                    listener.onResponse(event);
+                                    listener.onResponse(poiResults);
                             }
                         }, new Response.ErrorListener() {
                     @Override
@@ -76,17 +82,16 @@ public class WeatherService {
                 e.printStackTrace();
             }
         } else {
-            System.out.println("WARNING: max number of weather API request reached :" + numReq);
-            Log.w(TAG, "WARNING: max number of weather API request reached :" + numReq);
+            System.out.println("WARNING: max number of pointsOfInterest API request reached :" + numReq);
+            Log.w(TAG, "WARNING: max number of pointsOfInterest API request reached :" + numReq);
         }
     }
 
-    public void registerResponseListener(ResponseListener<WeatherEvent> listener) {
+    public void registerResponseListener(ResponseListener<Results> listener) {
         listeners.add(listener);
     }
 
     private String formatRequest(double lat, double lon) {
-        return FORECAST_IO_URL + FORECAST_IO_KEY + "/" + lat + "," + lon;
+        return URL + lat + "," + lon + KEY;
     }
-
 }

@@ -1,4 +1,4 @@
-package com.keepfit.triggers.location;
+package com.keepfit.triggers.service;
 
 import android.Manifest;
 import android.app.PendingIntent;
@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -20,6 +21,8 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.keepfit.triggers.listener.PermissionRequestListener;
@@ -35,7 +38,7 @@ import java.util.List;
  * Created by Edward on 4/12/2016.
  */
 public class LocationService implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
-        .OnConnectionFailedListener, ResultCallback<Status> {
+        .OnConnectionFailedListener, ResultCallback<Status>, LocationListener {
     private static final String TAG = "LocationService";
     private static final int MAX_ADDRESSES = 5;
     private static final int VERSION_CODE = 1;
@@ -56,6 +59,7 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
     private SharedPreferences prefs;
     private PendingIntent geofencePendingIntent;
     private boolean disableGeofences;
+    private GoogleApiClient.ConnectionCallbacks connectionCallbacks;
 
     private LocationService(Context context) {
         this.context = context;
@@ -73,11 +77,11 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
         this(context, listener, false);
     }
 
-
-    public void connect() {
+    public void connect(GoogleApiClient.ConnectionCallbacks connectionCallbacks) {
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
         createGoogleApiClient();
         googleApiClient.connect();
+        this.connectionCallbacks = connectionCallbacks;
     }
 
     public void disconnect() {
@@ -130,9 +134,11 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
     public void onConnected(Bundle connectionHint) {
         if (disableGeofences) return;
         handleConnection();
+        connectionCallbacks.onConnected(connectionHint);
     }
 
     private boolean connectionPermissionGranted;
+
     private void handleConnection() {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission
                 .ACCESS_FINE_LOCATION) != PackageManager
@@ -157,6 +163,15 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
         lastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 googleApiClient);
 
+        LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient,
+                new LocationRequest().create()
+                        .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                        .setInterval(GEOFENCE_LOITERING_DELAY)
+                        .setFastestInterval(GEOFENCE_LOITERING_DELAY)
+                        .setNumUpdates(1),
+                this
+        );
+
         GeofencingRequest request = createGeoFences();
         geofencePendingIntent = getGeofencePendingIntent();
 
@@ -170,11 +185,17 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
     @Override
     public void onConnectionSuspended(int i) {
         Log.w(TAG, "Connection suspended... " + i);
+        connectionCallbacks.onConnectionSuspended(i);
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
+    }
 
+    @Override
+    public void onLocationChanged(Location location) {
+        Toast.makeText(context, "location :" + location.getLatitude() + " , " + location.getLongitude(), Toast
+                .LENGTH_SHORT).show();
     }
 
     private GeofencingRequest createGeoFences() {

@@ -5,11 +5,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.keepfit.triggers.interests.Item;
+import com.keepfit.triggers.interests.PointsOfInterestResponse;
 import com.keepfit.triggers.interests.Results;
 import com.keepfit.triggers.thread.BaseThread;
 import com.keepfit.triggers.thread.DateThread;
@@ -22,6 +24,9 @@ import com.keepfit.triggers.utils.Broadcast;
 import com.keepfit.triggers.utils.DataProcessor;
 import com.keepfit.triggers.utils.Dates;
 import com.keepfit.triggers.utils.Extension;
+import com.keepfit.triggers.utils.TriggerCache;
+import com.keepfit.triggers.utils.TriggerObject;
+import com.keepfit.triggers.utils.enums.Scenario;
 import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.weather.Forecast;
@@ -39,15 +44,10 @@ public class TriggerService extends Service {
 
     private static AlgorithmBaseThread thread;
     private static List<TriggerThread> threads;
-    private static boolean running;
     private static Context context;
     private TriggerReceiver receiver;
-
-    private List<KeepFitCalendarEvent> calendarEvents;
-    private WeatherEvent weatherEvent;
-    private Double stepcounterPercentage;
-    private String time;
-    boolean  notificationSent = false;
+    private static boolean running, started;
+    private boolean notificationSent = false;
 
     @Override
     public void onCreate() {
@@ -62,6 +62,7 @@ public class TriggerService extends Service {
 
         thread.startThread();
         running = true;
+        started = true;
 
         return START_NOT_STICKY;
     }
@@ -84,6 +85,7 @@ public class TriggerService extends Service {
         thread.stopThread();
         thread = null;
         running = false;
+        started = false;
     }
 
     private void registerReceivers() {
@@ -98,7 +100,7 @@ public class TriggerService extends Service {
             threads = new ArrayList<>();
         for (TriggerThread t : threads) {
             if (t.getTriggerType() == thread.getTriggerType()) {
-                // Thread already added!
+                Log.w(TAG, String.format("The trigger %s has already been added!", thread.getName()));
                 return;
             }
         }
@@ -111,6 +113,14 @@ public class TriggerService extends Service {
 
     public static boolean isRunning() {
         return running;
+    }
+
+    public static boolean isStarted() {
+        return started;
+    }
+
+    public static void pauseService(boolean pause) {
+        thread.pauseThread(pause);
     }
 
     public static void setContext(Context mainContext) {
@@ -129,7 +139,7 @@ public class TriggerService extends Service {
 
         @Override
         public void doStartAction() {
-            Log.d(TAG, "STARTING THREAD!");
+            Log.d(TAG, "STARTING TRIGGER SERVICE!");
             for (TriggerThread thread : threads) {
                 thread.startThread();
             }
@@ -137,45 +147,52 @@ public class TriggerService extends Service {
 
         @Override
         public void doStopAction() {
-            Log.d(TAG, "STOPPING THREAD!");
+            Log.d(TAG, "STOPPING TRIGGER SERVICE!");
             for (TriggerThread thread : threads) {
                 thread.stopThread();
+                thread = null;
             }
         }
 
         @Override
         public void pauseThread(boolean pause) {
+            Log.d(TAG, "PAUSING TRIGGER SERVICE!");
+            for (TriggerThread thread : threads) {
+                thread.pauseThread(pause);
+            }
+            running = !pause;
+        }
 
+        @Override
+        protected int getTimeout() {
+            return 1000;
         }
     }
 
     private void handleDateReceived(Intent intent) {
         DateThread dateThread = (DateThread) getTrigger(TriggerType.CALENDAR);
-        calendarEvents = dateThread.getTriggerObject();
     }
 
     private void handleLocationReceived() {
-         }
 
-    private void handleStepCounterReceived() {
-        StepCounterThread stepCounterThread = (StepCounterThread) getTrigger(TriggerType.STEP_COUNTER);
-        stepcounterPercentage = stepCounterThread.getTriggerObject();
-        if(stepcounterPercentage >= 95){
+    }
+
+    private void handleStepCounterReceived(Intent intent) {
+        double completeness = intent.getDoubleExtra("completeness", 0);
+        if (completeness >= 95) {
             checkScenarios();
         }
     }
 
     private void handleTimeReceived(Intent intent) {
-        TimeThread timeThread = (TimeThread) getTrigger(TriggerType.TIME);
-        time = timeThread.getTriggerObject();
         checkScenarios();
     }
 
     private void handleWeatherReceived(Intent intent) {
-        WeatherThread weatherThread = (WeatherThread) getTrigger(TriggerType.WEATHER);
-        weatherEvent = weatherThread.getTriggerObject();
+        WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
         Forecast forecast = weatherEvent.getCurrentForecast();
-        Extension.sendNotification(context, "WEATHER", String.format("Summary: %s; Temp: %s; precipProb: %s; Lat: %s; Long: %s; ",
+        Extension.sendNotification(context, "WEATHER", String.format("Summary: %s; Temp: %s; precipProb: %s; Lat: %s;" +
+                        " Long: %s; ",
                 forecast.getSummary(),
                 forecast.getTemperature(),
                 forecast.getPrecipProbability(),
@@ -220,36 +237,51 @@ public class TriggerService extends Service {
         return thread;
     }
 
-    private DateThread getDateThread() {
-        return (DateThread) getTrigger(TriggerType.CALENDAR);
-    }
-
     class TriggerReceiver extends BroadcastReceiver {
         @Override
-        public void onReceive(Context context, Intent intent) {
-            TriggerType triggerType = TriggerType.getById(intent.getIntExtra(Broadcast.ACTION, 0));
-            switch (triggerType) {
-                case CALENDAR:
-                    handleDateReceived(intent);
-                    break;
-                case LOCATION:
-                    handleLocationReceived();
-                    break;
-                case STEP_COUNTER:
-                    handleStepCounterReceived();
-                    break;
-                case TIME:
-                    handleTimeReceived(intent);
-                    break;
-                case WEATHER:
-                    handleWeatherReceived(intent);
-                    break;
-                case POI:
-                    handlePointsOfInterestReceived(intent);
-                    break;
+        public void onReceive(Context context, Intent intent) {;
+            boolean isScenario = intent.getBooleanExtra(Broadcast.IS_SCENARIO, false);
+            if (!isScenario) {
+                TriggerType triggerType = TriggerType.getById(intent.getIntExtra(Broadcast.ACTION, 0));
+                switch (triggerType) {
+                    case CALENDAR:
+                        handleDateReceived(intent);
+                        break;
+                    case LOCATION:
+                        handleLocationReceived();
+                        break;
+                    case STEP_COUNTER:
+                        handleStepCounterReceived(intent);
+                        break;
+                    case TIME:
+                        handleTimeReceived(intent);
+                        break;
+                    case WEATHER:
+                        handleWeatherReceived(intent);
+                        break;
+                    case POI:
+                        handlePointsOfInterestReceived(intent);
+                        break;
+                }
+            } else {
+                Scenario scenario = Scenario.getById(intent.getIntExtra(Broadcast.ACTION, 0));
+                switch (scenario) {
+                    case FIRST:
+                        checkFirstScenario();
+                        break;
+                    case SECOND:
+                        checkSecondScenario();
+                        break;
+                    case THIRD:
+                        checkThirdScenario();
+                        break;
+                }
             }
         }
     }
+
+    private final static int MAX_UPDATE_ATTEMPTS = 10;
+    private int updateCount = 0;
 
     private void checkScenarios() {
         checkFirstScenario();
@@ -258,39 +290,75 @@ public class TriggerService extends Service {
     }
 
     private void checkThirdScenario() {
+        if (updateCount > MAX_UPDATE_ATTEMPTS) {
+            Log.w(TAG, "Max update attempts were reached for third scenario.");
+            updateCount = 0;
+            return;
+        }
         long twoHours = 2 * 60 * 60 * 1000;
-        if(!DataProcessor.isThereAnyCalendarEventInTheWay(twoHours, this.calendarEvents)){
-            if(!DataProcessor.isTheWeatherBad(this.weatherEvent)){
-                if(DataProcessor.isLaterThan(Dates.getDateFromHours("11:00:00"))){
-                    Extension.sendNotification(context, "You should go out!", "It's early, You don't have any calendar events nad the weather is good :" + this.weatherEvent.getCurrentForecast().getSummary());
+
+        ArrayList<KeepFitCalendarEvent> calendarEvents = (ArrayList<KeepFitCalendarEvent>) TriggerCache.get
+                (TriggerType.WEATHER);
+        WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
+        if (weatherEvent == null || calendarEvents == null) {
+            Broadcast.broadcastUpdateForThirdScenario(context);
+            updateCount++;
+            return;
+        }
+
+        if (!DataProcessor.isThereAnyCalendarEventInTheWay(twoHours, calendarEvents)) {
+            if (!DataProcessor.isTheWeatherBad(weatherEvent)) {
+                if (DataProcessor.isLaterThan(Dates.getDateFromHours("11:00:00"))) {
+                    Extension.sendNotification(context, "You should go out!", "It's early, You don't have any " +
+                            "calendar events and the weather is good :" + weatherEvent.getCurrentForecast()
+                            .getSummary());
                 }
             }
         }
+        updateCount = 0;
     }
 
     private void checkSecondScenario() {
-        if(!DataProcessor.isTheWeatherBad(this.weatherEvent) && DataProcessor.isCompletenessLowerThan(30.0, this.stepcounterPercentage)){
-            Extension.sendNotification(context, "You should go out!", "The weather is good :" + this.weatherEvent.getCurrentForecast().getSummary());
+        if (updateCount > MAX_UPDATE_ATTEMPTS) {
+            Log.w(TAG, "Max update attempts were reached for second scenario.");
+            updateCount = 0;
+            return;
+        }
+        WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
+        Double stepCounterPercentage = TriggerCache.get(TriggerType.STEP_COUNTER, Double.class);
+        if (weatherEvent == null || stepCounterPercentage == null || stepCounterPercentage == 0) {
+            Broadcast.broadcastUpdateForSecondScenario(context);
+            updateCount++;
+            return;
+        }
+        if (!DataProcessor.isTheWeatherBad(weatherEvent) && DataProcessor.isCompletenessLowerThan(30.0,
+                stepCounterPercentage)) {
+            Extension.sendNotification(context, "You should go out!", "The weather is good :" + weatherEvent
+                    .getCurrentForecast().getSummary());
             notificationSent = true;
         }
-
+        updateCount = 0;
     }
 
     private void checkFirstScenario() {
-        if (DataProcessor.isLaterThan(Dates.getDateFromHours("17:00:00"))){
-            if(DataProcessor.isCompletenessLowerThan(70.0, this.stepcounterPercentage)){
+        if (updateCount > MAX_UPDATE_ATTEMPTS) {
+            Log.w(TAG, "Max update attempts were reached for first scenario.");
+            updateCount = 0;
+            return;
+        }
+        Double stepCounterPercentage = TriggerCache.get(TriggerType.STEP_COUNTER, Double.class);
+        if (stepCounterPercentage == null) {
+            Broadcast.broadcastUpdateForFirstScenario(context);
+            updateCount++;
+            return;
+        }
+        if (DataProcessor.isLaterThan(Dates.getDateFromHours("17:00:00"))) {
+            if (DataProcessor.isCompletenessLowerThan(70.0, stepCounterPercentage)) {
                 Extension.sendNotification(context, "MOVE!", "The day is almost over and your goal is not completed.");
                 notificationSent = true;
             }
         }
+        updateCount = 0;
     }
-
-
-
-
-
-
-
-
 
 }

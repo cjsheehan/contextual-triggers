@@ -19,6 +19,10 @@ public class WeatherEvent implements Serializable {
     private DataBlock daily;
     private AlertObject[] alerts;
 
+    public WeatherEvent() {
+
+    }
+
     public WeatherEvent(String latitude, String longitude, String timezone, String offset, DataPoint currently, DataBlock minutely, DataBlock hourly, DataBlock daily, AlertObject[] alerts) {
         this.latitude = latitude;
         this.longitude = longitude;

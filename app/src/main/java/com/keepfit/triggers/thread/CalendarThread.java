@@ -24,7 +24,7 @@ public class CalendarThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     private static final int TIMEOUT = 1000;
 
     public CalendarThread(Context context) {
-        super(TITLE, TriggerType.CALENDAR, false, TIMEOUT, context);
+        super(TITLE, TriggerType.CALENDAR, false, context);
     }
 
     @Override
@@ -64,6 +64,9 @@ public class CalendarThread extends TriggerThread<List<KeepFitCalendarEvent>> {
         catch(Exception e)
         {
             e.printStackTrace();
+        } finally {
+            if (cursor != null)
+                cursor.close();
         }
 
         // For each calendar, display all the events from the previous week to the end of next week.
@@ -206,6 +209,8 @@ public class CalendarThread extends TriggerThread<List<KeepFitCalendarEvent>> {
                     while(eventCursor.moveToNext());
                 }
             }
+            if (eventCursor != null)
+                eventCursor.close();
             break;
         }
         /*((Activity) context).runOnUiThread(new Runnable() {
@@ -246,5 +251,10 @@ public class CalendarThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     @Override
     protected String getMessage() {
         return String.format("You reached the goal for the Calendar!");
+    }
+
+    @Override
+    protected int getTimeout() {
+        return TIMEOUT;
     }
 }

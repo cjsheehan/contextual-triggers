@@ -1,4 +1,4 @@
-package com.keepfit.triggers.interests;
+package com.keepfit.triggers.service;
 
 import android.content.Context;
 import android.util.Log;
@@ -11,33 +11,31 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
 import com.keepfit.triggers.listener.ResponseListener;
+import com.keepfit.triggers.weather.WeatherEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Chris on 12/04/2016.
+ * Created by Chris on 10/04/2016.
  */
-public class PointsOfInterestService {
-    private static final String TAG = "PointsOfInterestService";
-    // EXAMPLE_URL = https://places.cit.api.here.com/places/v1/discover/explore?at=40.74917,-73.98529&app_id=9Dgt6MxRPvpgfwpUwmKX&app_code=xIM0Lg2YP8qKNjWJF9bHJw
-
-    private static final String URL = "https://places.cit.api.here.com/places/v1/discover/explore?at=";
-    private static final String KEY = "&app_id=9Dgt6MxRPvpgfwpUwmKX&app_code=xIM0Lg2YP8qKNjWJF9bHJw";
-
+public class WeatherService {
+    private static final String TAG = "WeatherService";
+    private static final String FORECAST_IO_URL = "https://api.forecast.io/forecast/";
+    private static final String FORECAST_IO_KEY = "a991d862d6211132d233ebc988081823";
 
     private Context context;
     private RequestQueue queue = null;
     int maxReq = 10;
     int numReq = 0;
-    private List<ResponseListener<Results>> listeners;
+    private List<ResponseListener<WeatherEvent>> listeners;
 
-    public PointsOfInterestService(Context context) {
+    public WeatherService(Context context) {
         this.context = context;
         listeners = new ArrayList<>();
     }
 
-    public void requestPointsOfInterest(final double lat, final double lon) {
+    public void requestWeather(double lat, double lon) {
         String url = formatRequest(lat, lon);
         Log.d(TAG, "WeatherService request url=" + url);
 
@@ -59,12 +57,9 @@ public class PointsOfInterestService {
                             @Override
                             public void onResponse(String response) {
                                 Gson gson = new Gson();
-                                PointsOfInterestResponse results = gson.fromJson(response, PointsOfInterestResponse.class);
-                                Results poiResults = results.getResults();
-                                poiResults.setSourceLatitude(lat);
-                                poiResults.setSourceLongitude(lon);
+                                WeatherEvent event = gson.fromJson(response, WeatherEvent.class);
                                 for (ResponseListener listener : listeners)
-                                    listener.onResponse(poiResults);
+                                    listener.onResponse(event);
                             }
                         }, new Response.ErrorListener() {
                     @Override
@@ -82,16 +77,17 @@ public class PointsOfInterestService {
                 e.printStackTrace();
             }
         } else {
-            System.out.println("WARNING: max number of pointsOfInterest API request reached :" + numReq);
-            Log.w(TAG, "WARNING: max number of pointsOfInterest API request reached :" + numReq);
+            System.out.println("WARNING: max number of weather API request reached :" + numReq);
+            Log.w(TAG, "WARNING: max number of weather API request reached :" + numReq);
         }
     }
 
-    public void registerResponseListener(ResponseListener<Results> listener) {
+    public void registerResponseListener(ResponseListener<WeatherEvent> listener) {
         listeners.add(listener);
     }
 
     private String formatRequest(double lat, double lon) {
-        return URL + lat + "," + lon + KEY;
+        return FORECAST_IO_URL + FORECAST_IO_KEY + "/" + lat + "," + lon;
     }
+
 }

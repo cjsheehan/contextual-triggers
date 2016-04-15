@@ -22,7 +22,7 @@ public class TimeThread extends TriggerThread<String> {
     private TimeInterval[] timeIntervals;
 
     public TimeThread(Context context) {
-        super(TITLE, TriggerType.TIME, false, TIMEOUT, context);
+        super(TITLE, TriggerType.TIME, false, context);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class TimeThread extends TriggerThread<String> {
 
     @Override
     public void doStartAction() {
-        timeIntervals = new TimeInterval[] {
+        timeIntervals = new TimeInterval[]{
                 new TimeInterval("09:00:00"),
                 new TimeInterval("12:00:00"),
                 new TimeInterval("15:00:00"),
@@ -101,5 +101,10 @@ public class TimeThread extends TriggerThread<String> {
             this.timeStamp = timeStamp;
             this.passed = passed;
         }
+    }
+
+    @Override
+    protected int getTimeout() {
+        return TIMEOUT;
     }
 }

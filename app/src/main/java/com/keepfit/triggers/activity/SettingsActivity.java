@@ -21,11 +21,12 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.keepfit.triggers.R;
 import com.keepfit.triggers.listener.PermissionRequestListener;
 import com.keepfit.triggers.listener.PermissionResponseListener;
-import com.keepfit.triggers.location.LocationService;
+import com.keepfit.triggers.service.LocationService;
 import com.keepfit.triggers.utils.enums.TriggerPreference;
 
 import java.util.List;
@@ -48,7 +49,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
      */
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
+    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference
+            .OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
             String stringValue = value.toString();
@@ -65,7 +67,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                 ? listPreference.getEntries()[index]
                                 : null);
 
-            }  else {
+            } else {
                 // For all other preferences, set the summary to the value's
                 // simple string representation.
                 preference.setSummary(stringValue);
@@ -114,7 +116,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 //        setupActionBar();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
-    
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -157,7 +159,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * activity is showing a two-pane settings UI.
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class GeneralPreferenceFragment extends PreferenceFragment{
+    public static class GeneralPreferenceFragment extends PreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -189,8 +191,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class HistoryPreferenceFragment extends PreferenceFragment implements PermissionRequestListener {
 
-        private static LocationService locationService;
+        private LocationService locationService;
         PermissionResponseListener permissionResponseListener;
+
+        Preference homeCurrentLocationButton;
+        Preference workCurrentLocationButton;
+        Preference customCurrentLocationButton;
+        EditTextPreference homeAddress;
+        EditTextPreference workAddress;
+        EditTextPreference customAddress;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -218,7 +227,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             bindPreferenceSummaryToValue(customLongitude);
             bindPreferenceSummaryToValue(customLatitude);
 
-            Preference homeCurrentLocationButton = findPreference(TriggerPreference.HOME_CURRENT_LOCATION.title);
+            homeCurrentLocationButton = findPreference(TriggerPreference.HOME_CURRENT_LOCATION.title);
+//            homeCurrentLocationButton.setEnabled(false);
             homeCurrentLocationButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
@@ -226,7 +236,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     return true;
                 }
             });
-            Preference workCurrentLocationButton = findPreference(TriggerPreference.WORK_CURRENT_LOCATION.title);
+            workCurrentLocationButton = findPreference(TriggerPreference.WORK_CURRENT_LOCATION.title);
+//            workCurrentLocationButton.setEnabled(false);
             workCurrentLocationButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
@@ -234,7 +245,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     return true;
                 }
             });
-            Preference customCurrentLocationButton = findPreference(TriggerPreference.CUSTOM_CURRENT_LOCATION.title);
+            customCurrentLocationButton = findPreference(TriggerPreference.CUSTOM_CURRENT_LOCATION.title);
+//            workCurrentLocationButton.setEnabled(false);
             customCurrentLocationButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
@@ -244,27 +256,33 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             });
 
 
-            final EditTextPreference homeAddress = (EditTextPreference) findPreference(TriggerPreference.HOME_ADDRESS.title);
+            homeAddress = (EditTextPreference) findPreference(TriggerPreference.HOME_ADDRESS.title);
+//            homeAddress.setEnabled(false);
             homeAddress.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    setCurrentLocationForPreferenceFromAddress(preference, newValue.toString(), homeLongitude, homeLatitude);
+                    setCurrentLocationForPreferenceFromAddress(preference, newValue.toString(), homeLongitude,
+                            homeLatitude);
                     return true;
                 }
             });
-            final EditTextPreference workAddress = (EditTextPreference) findPreference(TriggerPreference.WORK_ADDRESS.title);
+            workAddress = (EditTextPreference) findPreference(TriggerPreference.WORK_ADDRESS.title);
+//            workAddress.setEnabled(false);
             workAddress.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    setCurrentLocationForPreferenceFromAddress(preference, newValue.toString(), workLongitude, workLatitude);
+                    setCurrentLocationForPreferenceFromAddress(preference, newValue.toString(), workLongitude,
+                            workLatitude);
                     return true;
                 }
             });
-            final EditTextPreference customAddress = (EditTextPreference) findPreference(TriggerPreference.CUSTOM_ADDRESS.title);
+            customAddress = (EditTextPreference) findPreference(TriggerPreference.CUSTOM_ADDRESS.title);
+//            customAddress.setEnabled(false);
             customAddress.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    setCurrentLocationForPreferenceFromAddress(preference, newValue.toString(), customLongitude, customLatitude);
+                    setCurrentLocationForPreferenceFromAddress(preference, newValue.toString(), customLongitude,
+                            customLatitude);
                     return true;
                 }
             });
@@ -285,10 +303,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             });
         }
 
-        private void setCurrentLocationForPreferenceFromAddress(Preference addressPreference, String address, final Preference longitude, final Preference latitude) {
+        private void setCurrentLocationForPreferenceFromAddress(Preference addressPreference, String address, final
+        Preference longitude, final Preference latitude) {
             Barcode.GeoPoint point = locationService.getLocationFromAddress(address);
             if (point == null) {
-                Toast.makeText(getActivity(), "Could not find location for the address: " + address, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Could not find location for the address: " + address, Toast
+                        .LENGTH_SHORT).show();
                 return;
             }
             String lon = String.valueOf(point.lng);
@@ -307,7 +327,22 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         @Override
         public void onStart() {
-            locationService.connect();
+            locationService.connect(new GoogleApiClient.ConnectionCallbacks() {
+                @Override
+                public void onConnected(Bundle bundle) {
+//                    homeCurrentLocationButton.setEnabled(true);
+//                    workCurrentLocationButton.setEnabled(true);
+//                    customCurrentLocationButton.setEnabled(true);
+//                    homeAddress.setEnabled(true);
+//                    workAddress.setEnabled(true);
+//                    customAddress.setEnabled(true);
+                }
+
+                @Override
+                public void onConnectionSuspended(int i) {
+
+                }
+            });
             super.onStart();
         }
 

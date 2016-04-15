@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.location.Location;
 
 import com.keepfit.triggers.interests.Results;
+import com.keepfit.triggers.utils.enums.Scenario;
 import com.keepfit.triggers.utils.enums.TriggerType;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.weather.WeatherEvent;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 public class Broadcast {
 
     public static String ACTION = "action";
+    public static String IS_SCENARIO = "isScenario";
 
     /*****
      * Broadcasting
@@ -61,6 +63,27 @@ public class Broadcast {
         Intent intent = new Intent(TriggerType.POI.title);
         intent.putExtra("poiEvent", poiEvent);
         intent.putExtra(ACTION, TriggerType.POI.id);
+        context.sendBroadcast(intent);
+    }
+
+    public static void broadcastUpdateForFirstScenario(Context context) {
+        Intent intent = new Intent(Scenario.FIRST.title);
+        intent.putExtra(ACTION, Scenario.FIRST.id);
+        intent.putExtra(IS_SCENARIO, true);
+        context.sendBroadcast(intent);
+    }
+
+    public static void broadcastUpdateForSecondScenario(Context context) {
+        Intent intent = new Intent(Scenario.SECOND.title);
+        intent.putExtra(ACTION, Scenario.SECOND.id);
+        intent.putExtra(IS_SCENARIO, true);
+        context.sendBroadcast(intent);
+    }
+
+    public static void broadcastUpdateForThirdScenario(Context context) {
+        Intent intent = new Intent(Scenario.THIRD.title);
+        intent.putExtra(ACTION, Scenario.THIRD.id);
+        intent.putExtra(IS_SCENARIO, true);
         context.sendBroadcast(intent);
     }
 }

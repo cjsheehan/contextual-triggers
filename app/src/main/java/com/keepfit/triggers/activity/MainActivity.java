@@ -19,6 +19,7 @@ import com.keepfit.triggers.service.TriggerService;
 import com.keepfit.triggers.listener.PermissionRequestListener;
 import com.keepfit.triggers.thread.DateThread;
 import com.keepfit.triggers.thread.LocationThread;
+import com.keepfit.triggers.thread.PointsOfInterestThread;
 import com.keepfit.triggers.thread.StepCounterThread;
 import com.keepfit.triggers.thread.TimeThread;
 import com.keepfit.triggers.thread.TriggerThread;
@@ -55,12 +56,18 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
         btnTriggers.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (TriggerService.isRunning()) {
-                    stopService(serviceIntent);
-                    btnTriggers.setText(R.string.start_triggers);
-                } else {
+                if (!TriggerService.isStarted()) {
                     startService(serviceIntent);
                     btnTriggers.setText(R.string.stop_triggers);
+
+                } else {
+                    if (TriggerService.isRunning()) {
+                        TriggerService.pauseService(true);
+                        btnTriggers.setText(R.string.start_triggers);
+                    } else {
+                        TriggerService.pauseService(false);
+                        btnTriggers.setText(R.string.stop_triggers);
+                    }
                 }
             }
         });
@@ -75,8 +82,9 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
             TriggerService.addThread(new TimeThread(this));
             TriggerService.addThread(new DateThread(this));
             TriggerService.addThread(new StepCounterThread(this));
-            TriggerService.addThread(new WeatherThread(this));
+            TriggerService.addThread(new WeatherThread(this, this));
             TriggerService.addThread(new LocationThread(this, this));
+            TriggerService.addThread(new PointsOfInterestThread(this, this));
             TriggerService.setContext(this);
         }
 
@@ -132,6 +140,7 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
 
     @Override
     public void onStop() {
+        stopService(serviceIntent);
         super.onStop();
     }
 
