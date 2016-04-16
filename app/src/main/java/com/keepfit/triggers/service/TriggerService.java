@@ -46,6 +46,7 @@ public class TriggerService extends Service {
     private static boolean running, started;
     private boolean notificationSent = false;
     private SharedPreferences prefs;
+    private String closestPoi;
 
     @Override
     public void onCreate() {
@@ -242,17 +243,30 @@ public class TriggerService extends Service {
         CalendarThread calendarThread = (CalendarThread) getTrigger(TriggerType.CALENDAR);
     }
 
-    private void handleLocationReceived(Intent intent) {
-     String  geofenceId = (String) intent.getSerializableExtra("geofenceEvent");
-        Notification.sendNotification(context, "You entered " + geofenceId," ", Scenario.THIRD);
-        checkScenarios();
 
+    private void handleLocationReceived(Intent intent){
 
     }
 
+    private void handleGeofenceReceived(Intent intent) {
+     String  geofenceName = (String) intent.getSerializableExtra("geofenceEvent");
+        WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
+        Forecast forecast = weatherEvent.getCurrentForecast();
+        if(!DataProcessor.isTheWeatherBad(weatherEvent)) {
+            Notification.sendNotification(context,"You left just" + geofenceName,"You should walk home the weather is good" + forecast.getSummary(), Scenario.getById(intent.getIntExtra(Broadcast.ACTION, 0)));
+        }
+        else{
+            Notification.sendNotification(context, "You left just" + geofenceName, "You should take the bus the weather is bad" + forecast.getSummary(), Scenario.getById(intent.getIntExtra(Broadcast.ACTION, 0)));
+
+        }
+    }
+
     private void handleStepCounterReceived(Intent intent) {
-        double completeness = intent.getDoubleExtra("completeness", 0);
-        if (completeness >= 95) {
+        double completeness = TriggerCache.get(TriggerType.STEP_COUNTER, Double.class);
+        if(!DataProcessor.isCompletenessLowerThan(100, completeness)) {
+            Notification.sendNotification(context,"Daily goal completed!", "Congratulation you reached your daily goal", Scenario.getById(intent.getIntExtra(Broadcast.ACTION, 0)));
+        }
+        else {
             checkScenarios();
         }
     }
@@ -275,12 +289,10 @@ public class TriggerService extends Service {
                     poiEvent.getSourceLongitude());
             Item[] item = poiEvent.getItems();
 
-            String poi = String.format("1st poi : Title: %s; Distance(m): %s; Category: %s; Lat: %s; Long: %s;",
-                    item[0].getTitle(),
-                    item[0].getDistance(),
+             this.closestPoi= String.format("%s called %s %s m from you",
                     item[0].getCategory().getTitle(),
-                    item[0].getPosition()[0],
-                    item[0].getPosition()[1]);
+                    item[0].getTitle(),
+                    item[0].getDistance());
 
         } else {
         }
@@ -323,6 +335,9 @@ public class TriggerService extends Service {
                     case POI:
                         handlePointsOfInterestReceived(intent);
                         break;
+                    case GEOFENCE:
+                        handleGeofenceReceived(intent);
+                        break;
                 }
             } else {
                 Scenario scenario = Scenario.getById(intent.getIntExtra(Broadcast.ACTION, 0));
@@ -357,17 +372,18 @@ public class TriggerService extends Service {
             thread.notifyWaitForWeather();
             return false;
         }
-        if (DataProcessor.isTheWeatherBad(weatherEvent) && DataProcessor.isCompletenessLowerThan(30.0,
-                stepCounterPercentage)) {
-            Notification.sendNotification(context, "Bad weather!",
-                    String.format("The weather is not too great: %s.\nYou should go to the gym, or do something " +
-                            "inside.", weatherEvent
-                            .getCurrentForecast().getSummary()), Scenario.BAD_WEATHER);
+        if(DataProcessor.isCompletenessLowerThan(70,stepCounterPercentage)) {
+            if (DataProcessor.isTheWeatherBad(weatherEvent) ){
+                Notification.sendNotification(context, "Bad weather!",
+                        String.format("The weather is not too great: %s.\nYou should go to the gym, or do something " +
+                                "inside."+ this.closestPoi, weatherEvent
+                                .getCurrentForecast().getSummary()), Scenario.BAD_WEATHER);
 
-        } else {
-            Notification.sendNotification(context, "You should go out!", String.format("The weather is good: %s.\n " +
-                    "You should go out and do something!", weatherEvent.getCurrentForecast().getSummary()), Scenario
-                    .GOOD_WEATHER);
+            } else {
+                Notification.sendNotification(context, "You should go out!", String.format("The weather is good: %s.\n " +
+                        "You should go out and do something!", weatherEvent.getCurrentForecast().getSummary()), Scenario
+                        .GOOD_WEATHER);
+            }
         }
         notificationSent = true;
         return true;
@@ -398,14 +414,15 @@ public class TriggerService extends Service {
 
     private boolean checkStepPercentageAtTime() {
         Double stepCounterPercentage = TriggerCache.get(TriggerType.STEP_COUNTER, Double.class);
-        if (stepCounterPercentage == null) {
+        Results pointsOfInterest = TriggerCache.get(TriggerType.POI, Results.class);
+        if (stepCounterPercentage == null || pointsOfInterest == null) {
             thread.notifyWaitForStepPercentage();
             return false;
         }
         if (DataProcessor.isLaterThan(17, 0)) {
             if (DataProcessor.isCompletenessLowerThan(70.0, stepCounterPercentage)) {
-                Notification.sendNotification(context, "MOVE!", "The day is almost over and your goal is not " +
-                        "completed.", Scenario.STEP_PERCENTAGE);
+                Notification.sendNotification(context, "You haven't completed your goal today!", "The day is almost over and your goal is not " +
+                        "completed." + this.closestPoi, Scenario.STEP_PERCENTAGE);
                 notificationSent = true;
             }
         }

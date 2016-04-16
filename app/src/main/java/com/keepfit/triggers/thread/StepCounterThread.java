@@ -45,7 +45,7 @@ public class StepCounterThread extends TriggerThread<Double> implements SensorEv
                     TriggerCache.put(TriggerType.STEP_COUNTER, progress);
 
                     txtDisplay.setText(String.valueOf(steps));
-                    if (previousProgress + 10 < progress) {
+                    if (previousProgress + 10 < progress && progress<109) {
                         previousProgress = progress;
                         Broadcast.broadcastStepCompleteness(context, progress);
                     }

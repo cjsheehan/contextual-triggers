@@ -10,7 +10,7 @@ public enum TriggerType {
     STEP_COUNTER(3, "Step Counter"),
     TIME(4, "Time"),
     WEATHER(5, "Weather"),
-    POI(6, "Points Of Interest");
+    POI(6, "Points Of Interest"), GEOFENCE(7, "Geofence");
 
     public int id;
     public String title;

@@ -54,9 +54,9 @@ public class Broadcast {
     }
 
     public static void broadcastGeofenceEvents(Context context, String geofencingEvent) {
-        Intent intent = new Intent(TriggerType.LOCATION.title);
+        Intent intent = new Intent(TriggerType.GEOFENCE.title);
         intent.putExtra("geofenceEvent", geofencingEvent);
-        intent.putExtra(ACTION, TriggerType.LOCATION.id);
+        intent.putExtra(ACTION, TriggerType.GEOFENCE.id);
         context.sendBroadcast(intent);
     }
 
