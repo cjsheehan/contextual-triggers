@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 
+import com.google.android.gms.location.GeofencingEvent;
 import com.keepfit.triggers.interests.Results;
 import com.keepfit.triggers.utils.enums.Scenario;
 import com.keepfit.triggers.utils.enums.TriggerType;
@@ -49,6 +50,13 @@ public class Broadcast {
         Intent intent = new Intent(TriggerType.WEATHER.title);
         intent.putExtra("weatherEvent", weatherEvent);
         intent.putExtra(ACTION, TriggerType.WEATHER.id);
+        context.sendBroadcast(intent);
+    }
+
+    public static void broadcastGeofenceEvents(Context context, String geofencingEvent) {
+        Intent intent = new Intent(TriggerType.GEOFENCE.title);
+        intent.putExtra("geofenceEvent", geofencingEvent);
+        intent.putExtra(ACTION, TriggerType.GEOFENCE.id);
         context.sendBroadcast(intent);
     }
 

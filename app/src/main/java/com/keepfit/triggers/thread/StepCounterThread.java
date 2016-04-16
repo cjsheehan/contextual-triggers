@@ -39,7 +39,7 @@ public class StepCounterThread extends TriggerThread<Double> implements SensorEv
         double progress = steps * 100 / dailyGoal;
         TriggerCache.put(TriggerType.STEP_COUNTER, progress);
 
-        if (previousProgress + 10 < progress) {
+        if (previousProgress + 10 < progress && progress < 109) {
             previousProgress = progress;
             Broadcast.broadcastStepCompleteness(context, progress);
         }

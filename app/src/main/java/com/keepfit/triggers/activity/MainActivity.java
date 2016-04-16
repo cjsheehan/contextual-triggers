@@ -74,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
                 if (!TriggerService.isStarted()) {
                     startService(serviceIntent);
                     btnTriggers.setText(R.string.stop_triggers);
-
                 } else {
                     if (TriggerService.isRunning()) {
                         TriggerService.pauseService(true);

@@ -82,7 +82,7 @@ public class DataProcessor {
         Forecast currentForecast = weatherEvent.getCurrentForecast();
         if (currentForecast.getTemperature() < 40.0)
             return true;
-        if (currentForecast.getPrecipProbability() > 0.8)
+        if(currentForecast.getPrecipProbability() > 0.5)
             return true;
         return false;
     }

@@ -12,6 +12,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.android.gms.location.Geofence;
 import com.keepfit.triggers.interests.Item;
 import com.keepfit.triggers.interests.Results;
 import com.keepfit.triggers.notification.Notification;
@@ -31,6 +32,7 @@ import com.keepfit.triggers.weather.WeatherEvent;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 /**
  * Created by Edward on 4/8/2016.
@@ -44,11 +46,14 @@ public class TriggerService extends Service {
     private TriggerReceiver receiver;
     private static boolean running, started;
     private boolean notificationSent = false;
+    private SharedPreferences prefs;
+    private String closestPoi;
 
     @Override
     public void onCreate() {
         Log.d(TAG, "onCreate!");
         thread = new TriggerBaseThread();
+        prefs = PreferenceManager.getDefaultSharedPreferences(context);
         registerReceivers();
     }
 
@@ -262,13 +267,31 @@ public class TriggerService extends Service {
         checkScenarios();
     }
 
-    private void handleLocationReceived() {
+
+    private void handleLocationReceived(Intent intent) {
 
     }
 
+    private void handleGeofenceReceived(Intent intent) {
+        String geofenceName = (String) intent.getSerializableExtra("geofenceEvent");
+        WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
+        Forecast forecast = weatherEvent.getCurrentForecast();
+        if (!DataProcessor.isTheWeatherBad(weatherEvent)) {
+            Notification.sendNotification(context, "You left just" + geofenceName, "You should walk home the weather is good" + forecast.getSummary
+                    (), Scenario.getById(intent.getIntExtra(Broadcast.ACTION, 0)));
+        } else {
+            Notification.sendNotification(context, "You left just" + geofenceName, "You should take the bus the weather is bad" + forecast
+                    .getSummary(), Scenario.getById(intent.getIntExtra(Broadcast.ACTION, 0)));
+
+        }
+    }
+
     private void handleStepCounterReceived(Intent intent) {
-        double completeness = intent.getDoubleExtra("completeness", 0);
-        if (completeness >= 95) {
+        double completeness = TriggerCache.get(TriggerType.STEP_COUNTER, Double.class);
+        if (!DataProcessor.isCompletenessLowerThan(100, completeness)) {
+            Notification.sendNotification(context, "Daily goal completed!", "Congratulation you reached your daily goal", Scenario.getById(intent
+                    .getIntExtra(Broadcast.ACTION, 0)));
+        } else {
             checkScenarios();
         }
     }
@@ -300,7 +323,7 @@ public class TriggerService extends Service {
                         handleCalendarEvents();
                         break;
                     case LOCATION:
-                        handleLocationReceived();
+                        handleLocationReceived(intent);
                         break;
                     case STEP_COUNTER:
                         handleStepCounterReceived(intent);
@@ -311,6 +334,9 @@ public class TriggerService extends Service {
                     case WEATHER:
                         break;
                     case POI:
+                        break;
+                    case GEOFENCE:
+                        handleGeofenceReceived(intent);
                         break;
                 }
             } else {
@@ -376,21 +402,22 @@ public class TriggerService extends Service {
             thread.notifyWaitForWeather();
             return false;
         }
-        if (DataProcessor.isTheWeatherBad(weatherEvent) && DataProcessor.isCompletenessLowerThan(30.0,
-                stepCounterPercentage)) {
-            if (checkIfNotificationAlreadySent(Scenario.BAD_WEATHER))
-                return true;
-            Notification.sendNotification(context, "Bad weather!",
-                    String.format("The weather is not too great: %s and %s.\nYou should go to the gym, or do " +
-                            "something inside.", weatherEvent.getCurrentForecast().getSummary(), weatherEvent
-                            .getCurrentForecast().getTemperature()), Scenario.BAD_WEATHER);
+        if (DataProcessor.isCompletenessLowerThan(70, stepCounterPercentage)) {
+            if (DataProcessor.isTheWeatherBad(weatherEvent)) {
+                if (checkIfNotificationAlreadySent(Scenario.BAD_WEATHER))
+                    return true;
+                Notification.sendNotification(context, "Bad weather!",
+                        String.format("The weather is not too great: %s and %s.\nYou should go to the gym, or do " +
+                                "something inside.", weatherEvent.getCurrentForecast().getSummary(), weatherEvent
+                                .getCurrentForecast().getTemperature()), Scenario.BAD_WEATHER);
 
-        } else {
-            if (checkIfNotificationAlreadySent(Scenario.GOOD_WEATHER))
-                return true;
-            Notification.sendNotification(context, "You should go out!", String.format("The weather is good: %s and " +
-                            "%s.\nYou should go out and do something!", weatherEvent.getCurrentForecast().getSummary(),
-                    weatherEvent.getCurrentForecast().getTemperature()), Scenario.GOOD_WEATHER);
+            } else {
+                if (checkIfNotificationAlreadySent(Scenario.GOOD_WEATHER))
+                    return true;
+                Notification.sendNotification(context, "You should go out!", String.format("The weather is good: %s and " +
+                                "%s.\nYou should go out and do something!", weatherEvent.getCurrentForecast().getSummary(),
+                        weatherEvent.getCurrentForecast().getTemperature()), Scenario.GOOD_WEATHER);
+            }
         }
         notificationSent = true;
         return true;
@@ -433,8 +460,7 @@ public class TriggerService extends Service {
         if (DataProcessor.isLaterThan(17, 0)) {
             if (DataProcessor.isCompletenessLowerThan(70.0, stepCounterPercentage)) {
                 Notification.sendNotification(context, "MOVE!", String.format("The day is almost over and your step " +
-                        "goal of %s is not " +
-                        "completed [%s%%].", (int) goal, stepCounterPercentage.intValue()), Scenario.STEP_PERCENTAGE);
+                        "goal of %s is not completed [%s%%].", (int) goal, stepCounterPercentage.intValue()), Scenario.STEP_PERCENTAGE);
                 notificationSent = true;
             }
         }
@@ -448,13 +474,12 @@ public class TriggerService extends Service {
         ArrayList<KeepFitCalendarEvent> calendarEvents = (ArrayList<KeepFitCalendarEvent>) TriggerCache.get
                 (TriggerType.CALENDAR);
         Results results = TriggerCache.get(TriggerType.POI, Results.class);
-        // Only rely on the weather for this trigger, but if calendar or points of interest events are available, use
-        // those
+        // Only rely on the weather for this trigger, but if calendar or points of interest events are available, use those
         if (weatherEvent == null || results == null || results.getItems() == null || results.getItems()[0] == null) {
             thread.notifyWaitForTimeBetween();
             return false;
         }
-        if (DataProcessor.isTimeBetween(2, 0, 10, 0)) {
+        if (DataProcessor.isTimeBetween(8, 0, 10, 0)) {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             double goal = Double.parseDouble(prefs.getString(TriggerPreference.STEP_LENGTH.title, "1000"));
             StringBuilder notificationMessage = new StringBuilder(String.format("You have a step goal of %s for " +
@@ -479,5 +504,6 @@ public class TriggerService extends Service {
         Notification notification = TriggerCache.get(scenario, Notification.class);
         return notification != null;
     }
+
 
 }

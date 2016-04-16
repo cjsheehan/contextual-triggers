@@ -42,12 +42,12 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
     private static final String TAG = "LocationService";
     private static final int MAX_ADDRESSES = 5;
     private static final int VERSION_CODE = 1;
-    private static final int GEOFENCE_RADIUS_IN_METERS = 1000;
+    private static final int GEOFENCE_RADIUS_IN_METERS = 100;
     private static final int GEOFENCE_EXPIRATION_IN_MILLISECONDS = 600000;
     private static final int GEOFENCE_LOITERING_DELAY = 10000;
-    private static final String HOME_KEY = "home";
-    private static final String WORK_KEY = "work";
-    private static final String CUSTOM_KEY = "custom";
+    public static final String HOME_KEY = "home";
+    public static final String WORK_KEY = "work";
+    public static final String CUSTOM_KEY = "custom";
 
     private Context context;
     private GoogleApiClient googleApiClient;
