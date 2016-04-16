@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference
+        android:key="exit_geofences"
+        android:selectAllOnFocus="true"
+        android:lines="2"
+        android:checked="false"
+        android:summary="Tap here to set your location outside any geofences."
+        android:title="Exit Geofences" />
+
+    <SwitchPreference
+        android:key="enter_geofences"
+        android:selectAllOnFocus="true"
+        android:lines="2"
+        android:checked="true"
+        android:summary="Tap here to reset your location back to your current location."
+        android:title="Reset Location" />
+
+</PreferenceScreen>

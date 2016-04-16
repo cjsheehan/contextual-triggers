@@ -3,7 +3,6 @@ package com.keepfit.triggers.activity;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -17,17 +16,16 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.preference.SwitchPreference;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.keepfit.triggers.R;
 import com.keepfit.triggers.listener.PermissionRequestListener;
 import com.keepfit.triggers.listener.PermissionResponseListener;
-import com.keepfit.triggers.service.LocationService;
 import com.keepfit.triggers.service.TriggerService;
 import com.keepfit.triggers.thread.LocationThread;
 import com.keepfit.triggers.utils.enums.TriggerPreference;
@@ -155,7 +153,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
-                || HistoryPreferenceFragment.class.getName().equals(fragmentName);
+                || HistoryPreferenceFragment.class.getName().equals(fragmentName)
+                || GeofencesPreferenceFragment.class.getName().equals(fragmentName);
     }
 
     /**
@@ -170,10 +169,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
             bindPreferenceSummaryToValue(findPreference(TriggerPreference.STEP_LENGTH.title));
         }
 
@@ -210,11 +205,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_history_settings);
             setHasOptionsMenu(true);
 
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-
             final Preference homeLongitude = findPreference(TriggerPreference.HOME_LONGITUDE.title);
             final Preference homeLatitude = findPreference(TriggerPreference.HOME_LATITUDE.title);
             final Preference workLongitude = findPreference(TriggerPreference.WORK_LONGITUDE.title);
@@ -229,7 +219,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             bindPreferenceSummaryToValue(customLatitude);
 
             homeCurrentLocationButton = findPreference(TriggerPreference.HOME_CURRENT_LOCATION.title);
-//            homeCurrentLocationButton.setEnabled(false);
             homeCurrentLocationButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
@@ -238,7 +227,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 }
             });
             workCurrentLocationButton = findPreference(TriggerPreference.WORK_CURRENT_LOCATION.title);
-//            workCurrentLocationButton.setEnabled(false);
             workCurrentLocationButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
@@ -247,7 +235,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 }
             });
             customCurrentLocationButton = findPreference(TriggerPreference.CUSTOM_CURRENT_LOCATION.title);
-//            workCurrentLocationButton.setEnabled(false);
             customCurrentLocationButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
@@ -258,7 +245,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
 
             homeAddress = (EditTextPreference) findPreference(TriggerPreference.HOME_ADDRESS.title);
-//            homeAddress.setEnabled(false);
             homeAddress.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -268,7 +254,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 }
             });
             workAddress = (EditTextPreference) findPreference(TriggerPreference.WORK_ADDRESS.title);
-//            workAddress.setEnabled(false);
             workAddress.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -278,7 +263,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 }
             });
             customAddress = (EditTextPreference) findPreference(TriggerPreference.CUSTOM_ADDRESS.title);
-//            customAddress.setEnabled(false);
             customAddress.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -309,11 +293,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             });
         }
 
-        private void setCurrentLocationForPreferenceFromAddress(Preference addressPreference, String address, final
-        Preference longitude, final Preference latitude) {
+        private void setCurrentLocationForPreferenceFromAddress(Preference addressPreference, String address, final Preference longitude, final
+        Preference latitude) {
             LocationThread locationThread = ((LocationThread) TriggerService.getTrigger(TriggerType.LOCATION));
             if (!locationThread.isRunning()) {
-                Toast.makeText(null, "You need to have locations enabled to use this feature.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(null, "You need to have locations enabled and running to use this feature.", Toast.LENGTH_SHORT).show();
                 return;
             }
             Barcode.GeoPoint point = locationThread.getLocationFromAddress(address);
@@ -340,7 +324,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         public void onStart() {
             LocationThread locationThread = ((LocationThread) TriggerService.getTrigger(TriggerType.LOCATION));
             if (!locationThread.isRunning()) {
-                Toast.makeText(getActivity(), "You need to have Locations enabled for this feature", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "You need to have Locations enabled and running for this feature", Toast.LENGTH_SHORT).show();
             }
             super.onStart();
         }
@@ -378,6 +362,76 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 default:
                     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
             }
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+            if (id == android.R.id.home) {
+                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
+    /**
+     * This fragment shows geofences preferences only. It is used when the
+     * activity is showing a two-pane settings UI.
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class GeofencesPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_geofences);
+            setHasOptionsMenu(true);
+
+            final SwitchPreference exitGeofences = (SwitchPreference) findPreference(TriggerPreference.EXIT_GEOFENCES.title);
+            final SwitchPreference enterGeofences = (SwitchPreference) findPreference(TriggerPreference.ENTER_GEOFENCES.title);
+
+            final LocationThread locationThread = ((LocationThread) TriggerService.getTrigger(TriggerType.LOCATION));
+            if (!locationThread.isRunning()) {
+                Toast.makeText(getActivity(), "You need to have locations enabled and running to use this feature.", Toast.LENGTH_SHORT).show();
+                exitGeofences.setEnabled(false);
+                enterGeofences.setEnabled(false);
+                return;
+            }
+
+            exitGeofences.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    boolean checked = exitGeofences.isChecked();
+                    togglePreference(!checked, enterGeofences);
+                    if (checked) {
+                        locationThread.useTestLocation(true);
+                        Toast.makeText(getActivity(), "Using the test location of " + locationThread.getTextToDisplayOnUI() + ".", Toast.LENGTH_SHORT).show();
+                    } else {
+                        locationThread.refreshLocation();
+                        Toast.makeText(getActivity(), "Using the current location.", Toast.LENGTH_SHORT).show();
+                    }
+                    return false;
+                }
+            });
+            enterGeofences.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    boolean checked = enterGeofences.isChecked();
+                    togglePreference(!checked, exitGeofences);
+                    if (checked) {
+                        locationThread.refreshLocation();
+                        Toast.makeText(getActivity(), "Using the current location.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        locationThread.useTestLocation(true);
+                        Toast.makeText(getActivity(), "Using the test location of " + locationThread.getTextToDisplayOnUI() + ".", Toast.LENGTH_SHORT).show();
+                    }
+                    return false;
+                }
+            });
+        }
+
+        private void togglePreference(boolean checked, SwitchPreference oppositePreference) {
+            oppositePreference.setChecked(checked);
         }
 
         @Override

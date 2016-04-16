@@ -4,14 +4,19 @@
 
     <header
         android:fragment="com.keepfit.triggers.activity.SettingsActivity$GeneralPreferenceFragment"
-        android:icon="@android:drawable/ic_menu_info_details"
-        android:title="@string/pref_header_general" />
+        android:icon="@drawable/ic_directions_run_black_24dp"
+        android:title="@string/pref_header_general"/>
 
     <header
         android:fragment="com.keepfit.triggers.activity.SettingsActivity$HistoryPreferenceFragment"
         android:icon="@android:drawable/ic_menu_sort_by_size"
-        android:summary="Stored locations"
-        android:title="@string/pref_header_locations" />
+        android:summary="Stored Locations"
+        android:title="@string/pref_header_locations"/>
 
+    <header
+        android:fragment="com.keepfit.triggers.activity.SettingsActivity$GeofencesPreferenceFragment"
+        android:icon="@android:drawable/ic_menu_mylocation"
+        android:summary="Test Geofence Locations"
+        android:title="@string/pref_header_locations"/>
 
 </preference-headers>

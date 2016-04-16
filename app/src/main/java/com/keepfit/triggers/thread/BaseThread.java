@@ -53,7 +53,7 @@ public abstract class BaseThread extends Thread implements IThread {
      */
     @Override
     public void startThread() {
-        Log.d(TAG, "Starting thread!");
+        Log.d(TAG, "Starting " + getName() + " thread!");
         if (!started)
             start();
         running = enabled;
@@ -65,7 +65,7 @@ public abstract class BaseThread extends Thread implements IThread {
      */
     @Override
     public void stopThread() {
-        Log.d(TAG, "Stopping thread!");
+        Log.d(TAG, "Stopping " + getName() + " thread!");
         running = false;
         doStopAction();
         boolean retry = true;

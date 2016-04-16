@@ -17,7 +17,9 @@ public enum TriggerPreference {
     CUSTOM_CURRENT_LOCATION("custom_location_button"),
     HOME_ADDRESS("home_address"),
     WORK_ADDRESS("work_address"),
-    CUSTOM_ADDRESS("custom_address");
+    CUSTOM_ADDRESS("custom_address"),
+    EXIT_GEOFENCES("exit_geofences"),
+    ENTER_GEOFENCES("enter_geofences");
 
     public String title;
 

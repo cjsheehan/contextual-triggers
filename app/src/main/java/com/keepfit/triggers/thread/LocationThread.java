@@ -23,7 +23,8 @@ public class LocationThread extends TriggerThread<Object> {
     private static final String TITLE = "Location";
 
     private LocationService locationService;
-    private boolean waitForSetup = false, waitForLocation = false, waitForConnectionPermission = true;
+    private Location testLocation;
+    private boolean waitForSetup = false, waitForLocation = false, waitForConnectionPermission = true, useTestLocation = false;
 
     public LocationThread(Context context, PermissionRequestListener listener) {
         super(TITLE, TriggerType.LOCATION, false, context);
@@ -32,35 +33,40 @@ public class LocationThread extends TriggerThread<Object> {
 
     @Override
     public void doTriggerRunAction() {
-        Log.d(TAG, "Wait for Connection: " + waitForConnectionPermission + " wait for location: " + waitForLocation);
-        if (!waitForConnectionPermission && (waitForLocation || shouldRefresh())) {
-            locationService.requestLocation(new PermissionResponseListener() {
-                @Override
-                protected void permissionGranted(Location location) {
-                    if (location == null) return;
-                    Broadcast.broadcastLocationReceived(context, location);
-                    TriggerCache.put(TriggerType.LOCATION, locationService.getLocation());
-                    waitForLocation = false;
-                }
+        if (!useTestLocation) {
+            if (!waitForConnectionPermission && (waitForLocation || shouldRefresh())) {
+                locationService.requestLocation(new PermissionResponseListener() {
+                    @Override
+                    protected void permissionGranted(Location location) {
+                        if (location == null) return;
+                        Broadcast.broadcastLocationReceived(context, location);
+                        TriggerCache.put(TriggerType.LOCATION, locationService.getLocation());
+                        waitForLocation = false;
+                    }
 
-                @Override
-                protected void permissionDenied() {
+                    @Override
+                    protected void permissionDenied() {
 
+                    }
+                });
+            }
+            if (waitForSetup) {
+                locationService.setupLocation();
+            }
+            if (waitForConnectionPermission) {
+                if (locationService.isConnectionPermissionGranted()) {
+                    waitForConnectionPermission = false;
                 }
-            });
-        }
-        if (waitForSetup) {
-            locationService.setupLocation();
-        }
-        if (waitForConnectionPermission) {
-            if (locationService.isConnectionPermissionGranted()) {
-                waitForConnectionPermission = false;
             }
         }
     }
 
     @Override
     public void doStartAction() {
+        testLocation = new Location("");
+        testLocation.setLatitude(10);
+        testLocation.setLongitude(10);
+
         locationService.connect(new GoogleApiClient.ConnectionCallbacks() {
             @Override
             public void onConnected(Bundle bundle) {
@@ -101,6 +107,18 @@ public class LocationThread extends TriggerThread<Object> {
         locationService.requestLocation(listener);
     }
 
+    public void refreshLocation() {
+        waitForLocation = true;
+    }
+
+    public void useTestLocation(boolean useTestLocation) {
+        this.useTestLocation = useTestLocation;
+    }
+
+    public boolean isUsingTestLocation() {
+        return useTestLocation;
+    }
+
     @Override
     public void doStopAction() {
         locationService.disconnect();
@@ -112,8 +130,8 @@ public class LocationThread extends TriggerThread<Object> {
     }
 
     @Override
-    protected String getTextToDisplayOnUI() {
-        Location lastLocation = locationService.getLocation();
+    public String getTextToDisplayOnUI() {
+        Location lastLocation = useTestLocation ? testLocation : locationService.getLocation();
         return lastLocation == null ? "No location" : String.format("Lat[%s] - Long[%s]", lastLocation.getLatitude(),
                 lastLocation.getLongitude());
     }
