@@ -203,8 +203,7 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
 
     @Override
     public void onLocationChanged(Location location) {
-        Toast.makeText(context, "Found your location: " + location.getLatitude() + " , " + location.getLongitude(), Toast
-                .LENGTH_SHORT).show();
+        Log.i(TAG, "Found your location: " + location.getLatitude() + " , " + location.getLongitude());
     }
 
     private GeofencingRequest createGeoFences() {

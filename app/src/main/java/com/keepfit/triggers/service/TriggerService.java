@@ -29,6 +29,7 @@ import com.keepfit.triggers.weather.Forecast;
 import com.keepfit.triggers.weather.WeatherEvent;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -133,65 +134,16 @@ public class TriggerService extends Service {
 
         private static final int TIMEOUT = 2000;
         private final static int MAX_UPDATE_ATTEMPTS = 10;
-        private int stepPercentageUpdateAttempts, weatherUpdateAttempts, calendarEventsUpdateAttempts,
-                pointsOfInterestAttempts;
-        private boolean waitForStepPercentage, waitForWeather, waitForCalendarEvents, waitForPointsOfInterest;
 
         @Override
         public void doRunAction() {
-
-//            if (waitForStepPercentage) {
-//                if (stepPercentageUpdateAttempts > MAX_UPDATE_ATTEMPTS) {
-//                    Log.w(TAG, "Step percentage scenario has reached the max attempts.");
-//                    waitForStepPercentage = false;
-//                    stepPercentageUpdateAttempts = 0;
-//                } else {
-//                    sleep();
-//                    stepPercentageUpdateAttempts++;
-//                    if (checkStepPercentageAtTime()) {
-//                        // Scenario was hit, so this is done
-//                        waitForStepPercentage = false;
-//                        stepPercentageUpdateAttempts = 0;
-//                    }
-//                }
-//            }
-//            if (waitForWeather) {
-//                if (weatherUpdateAttempts > MAX_UPDATE_ATTEMPTS) {
-//                    Log.w(TAG, "Weather scenario has reached the max attempts.");
-//                    waitForWeather = false;
-//                    weatherUpdateAttempts = 0;
-//                } else {
-//                    sleep();
-//                    weatherUpdateAttempts++;
-//                    if (checkForWeather()) {
-//                        // Scenario was hit, so this is done
-//                        waitForWeather = false;
-//                        weatherUpdateAttempts = 0;
-//                    }
-//                }
-//            }
-//            if (waitForCalendarEvents) {
-//                if (calendarEventsUpdateAttempts > MAX_UPDATE_ATTEMPTS) {
-//                    Log.w(TAG, "Calendar events scenario has reached the max attempts.");
-//                    waitForCalendarEvents = false;
-//                    calendarEventsUpdateAttempts = 0;
-//                } else {
-//                    sleep();
-//                    calendarEventsUpdateAttempts++;
-//                    if (checkCalendarEvents()) {
-//                        // Scenario was hit, so this is done
-//                        waitForCalendarEvents = false;
-//                        calendarEventsUpdateAttempts = 0;
-//                    }
-//                }
-//            }
-            for (Holder holder : holders) {
-                waitForEvent(holder);
-            }
+            if (holders != null)
+                for (Holder holder : holders) {
+                    waitForEvent(holder);
+                }
         }
 
         private Holder waitForEvent(Holder holder) {
-            Log.d(TAG, "Waiting for " + holder.scenario.title);
             if (holder.attempts > MAX_UPDATE_ATTEMPTS) {
                 Log.w(TAG, holder.scenario.title + " has reached the max attempts.");
                 holder.wait = false;
@@ -203,6 +155,9 @@ public class TriggerService extends Service {
                 switch (holder.scenario) {
                     case STEP_PERCENTAGE:
                         success = checkStepPercentageAtTime();
+                        break;
+                    case TIME_BETWEEN:
+                        success = checkTimeBetween();
                         break;
                     case NO_CALENDAR_EVENTS:
                         success = checkCalendarEvents();
@@ -230,8 +185,8 @@ public class TriggerService extends Service {
         }
 
         private List<Holder> holders;
-        private Holder stepPercentageHolder, badWeatherHolder, goodWeatherHolder, calendarEventsHolder,
-                pointsOfInterestHolder;
+        private Holder stepPercentageHolder, timeBetweenHolder, badWeatherHolder, goodWeatherHolder,
+                calendarEventsHolder, pointsOfInterestHolder;
 
         @Override
         public void doStartAction() {
@@ -240,12 +195,14 @@ public class TriggerService extends Service {
                 thread.startThread();
             }
             stepPercentageHolder = new Holder(Scenario.STEP_PERCENTAGE);
+            timeBetweenHolder = new Holder(Scenario.TIME_BETWEEN);
             badWeatherHolder = new Holder(Scenario.BAD_WEATHER);
             goodWeatherHolder = new Holder(Scenario.GOOD_WEATHER);
             calendarEventsHolder = new Holder(Scenario.NO_CALENDAR_EVENTS);
             pointsOfInterestHolder = new Holder(Scenario.POI);
             holders = new ArrayList<>();
             holders.add(stepPercentageHolder);
+            holders.add(timeBetweenHolder);
             holders.add(badWeatherHolder);
             holders.add(goodWeatherHolder);
             holders.add(calendarEventsHolder);
@@ -274,6 +231,10 @@ public class TriggerService extends Service {
             stepPercentageHolder.wait = true;
         }
 
+        public void notifyWaitForTimeBetween() {
+            timeBetweenHolder.wait = true;
+        }
+
         protected void notifyWaitForWeather() {
             badWeatherHolder.wait = true;
         }
@@ -297,8 +258,8 @@ public class TriggerService extends Service {
         }
     }
 
-    private void handleDateReceived(Intent intent) {
-        CalendarThread calendarThread = (CalendarThread) getTrigger(TriggerType.CALENDAR);
+    private void handleCalendarEvents() {
+        checkScenarios();
     }
 
     private void handleLocationReceived() {
@@ -314,31 +275,6 @@ public class TriggerService extends Service {
 
     private void handleTimeReceived(Intent intent) {
         checkScenarios();
-    }
-
-    private void handleWeatherReceived(Intent intent) {
-        WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
-        Forecast forecast = weatherEvent.getCurrentForecast();
-    }
-
-    private void handlePointsOfInterestReceived(Intent intent) {
-        Results poiEvent = (Results) intent.getSerializableExtra("poiEvent");
-        if (poiEvent == null) return;
-        int numPoi = poiEvent.getItems().length;
-        if (numPoi > 0) {
-            String info = String.format("%s poi found for Lat: %s Long: %s", numPoi, poiEvent.getSourceLatitude(),
-                    poiEvent.getSourceLongitude());
-            Item[] item = poiEvent.getItems();
-
-            String poi = String.format("1st poi : Title: %s; Distance(m): %s; Category: %s; Lat: %s; Long: %s;",
-                    item[0].getTitle(),
-                    item[0].getDistance(),
-                    item[0].getCategory().getTitle(),
-                    item[0].getPosition()[0],
-                    item[0].getPosition()[1]);
-
-        } else {
-        }
     }
 
     public static TriggerThread getTrigger(TriggerType triggerType) {
@@ -361,7 +297,7 @@ public class TriggerService extends Service {
                 TriggerType triggerType = TriggerType.getById(intent.getIntExtra(Broadcast.ACTION, 0));
                 switch (triggerType) {
                     case CALENDAR:
-                        handleDateReceived(intent);
+                        handleCalendarEvents();
                         break;
                     case LOCATION:
                         handleLocationReceived();
@@ -373,10 +309,8 @@ public class TriggerService extends Service {
                         handleTimeReceived(intent);
                         break;
                     case WEATHER:
-                        handleWeatherReceived(intent);
                         break;
                     case POI:
-                        handlePointsOfInterestReceived(intent);
                         break;
                 }
             } else {
@@ -384,6 +318,9 @@ public class TriggerService extends Service {
                 switch (scenario) {
                     case STEP_PERCENTAGE:
                         checkStepPercentageAtTime();
+                        break;
+                    case TIME_BETWEEN:
+                        checkTimeBetween();
                         break;
                     case GOOD_WEATHER:
                         checkForWeather();
@@ -404,6 +341,7 @@ public class TriggerService extends Service {
 
     private void checkScenarios() {
         checkStepPercentageAtTime();
+        checkTimeBetween();
         checkCalendarEvents();
         checkForWeather();
         checkPointsOfInterest();
@@ -443,15 +381,15 @@ public class TriggerService extends Service {
             if (checkIfNotificationAlreadySent(Scenario.BAD_WEATHER))
                 return true;
             Notification.sendNotification(context, "Bad weather!",
-                    String.format("The weather is not too great: %s and %s.\nYou should go to the gym, or do something " +
-                            "inside.", weatherEvent.getCurrentForecast().getSummary(), weatherEvent
+                    String.format("The weather is not too great: %s and %s.\nYou should go to the gym, or do " +
+                            "something inside.", weatherEvent.getCurrentForecast().getSummary(), weatherEvent
                             .getCurrentForecast().getTemperature()), Scenario.BAD_WEATHER);
 
         } else {
             if (checkIfNotificationAlreadySent(Scenario.GOOD_WEATHER))
                 return true;
-            Notification.sendNotification(context, "You should go out!", String.format("The weather is good: %s and %s" +
-                            ".\nYou should go out and do something!", weatherEvent.getCurrentForecast().getSummary(),
+            Notification.sendNotification(context, "You should go out!", String.format("The weather is good: %s and " +
+                            "%s.\nYou should go out and do something!", weatherEvent.getCurrentForecast().getSummary(),
                     weatherEvent.getCurrentForecast().getTemperature()), Scenario.GOOD_WEATHER);
         }
         notificationSent = true;
@@ -463,8 +401,7 @@ public class TriggerService extends Service {
             return true;
         long twoHours = 2 * 60 * 60 * 1000;
 
-        ArrayList<KeepFitCalendarEvent> calendarEvents = (ArrayList<KeepFitCalendarEvent>) TriggerCache.get
-                (TriggerType.CALENDAR);
+        ArrayList<KeepFitCalendarEvent> calendarEvents = (ArrayList<KeepFitCalendarEvent>) TriggerCache.get(TriggerType.CALENDAR);
         WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
         if (weatherEvent == null || calendarEvents == null) {
             thread.notifyWaitForCalendarEvents();
@@ -500,6 +437,40 @@ public class TriggerService extends Service {
                         "completed [%s%%].", (int) goal, stepCounterPercentage.intValue()), Scenario.STEP_PERCENTAGE);
                 notificationSent = true;
             }
+        }
+        return true;
+    }
+
+    private boolean checkTimeBetween() {
+        if (checkIfNotificationAlreadySent(Scenario.TIME_BETWEEN))
+            return true;
+        WeatherEvent weatherEvent = TriggerCache.get(TriggerType.WEATHER, WeatherEvent.class);
+        ArrayList<KeepFitCalendarEvent> calendarEvents = (ArrayList<KeepFitCalendarEvent>) TriggerCache.get
+                (TriggerType.CALENDAR);
+        Results results = TriggerCache.get(TriggerType.POI, Results.class);
+        // Only rely on the weather for this trigger, but if calendar or points of interest events are available, use
+        // those
+        if (weatherEvent == null || results == null || results.getItems() == null || results.getItems()[0] == null) {
+            thread.notifyWaitForTimeBetween();
+            return false;
+        }
+        if (DataProcessor.isTimeBetween(2, 0, 10, 0)) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            double goal = Double.parseDouble(prefs.getString(TriggerPreference.STEP_LENGTH.title, "1000"));
+            StringBuilder notificationMessage = new StringBuilder(String.format("You have a step goal of %s for " +
+                    "today!", (int) goal));
+            Item poiEvent;
+            if (results != null && results.getItems() != null && results.getItems()[0] != null) {
+                poiEvent = results.getItems()[0];
+                notificationMessage.append(String.format("\nYou should consider going to %s", poiEvent.getTitle()));
+            }
+            if (calendarEvents != null && !calendarEvents.isEmpty()) {
+                KeepFitCalendarEvent calendarEvent = calendarEvents.get(0);
+                notificationMessage.append(String.format("\nJust so you know: %s at %s - %s", calendarEvent.getName(),
+                        calendarEvent.getStartDate(), calendarEvent.getEndDate()));
+            }
+            Notification.sendNotification(context, "Good morning!", notificationMessage.toString(), Scenario
+                    .TIME_BETWEEN);
         }
         return true;
     }

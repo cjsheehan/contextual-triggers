@@ -28,6 +28,7 @@
         <service android:name=".service.TriggerService"
             android:exported="false"/>
         <service android:name=".service.GeofenceTransitionsIntentService"/>
+
     </application>
 
 </manifest>

@@ -6,11 +6,12 @@ import java.io.Serializable;
  * Created by Edward on 4/14/2016.
  */
 public enum Scenario implements Serializable {
-    STEP_PERCENTAGE(1, "stePercentage"),
-    NO_CALENDAR_EVENTS(2, "noCalendarEvents"),
-    GOOD_WEATHER(3, "goodWeather"),
-    BAD_WEATHER(3, "badWeather"),
-    POI(4, "poi");
+    STEP_PERCENTAGE(1, "stepPercentage"),
+    TIME_BETWEEN(2, "timeBetween"),
+    NO_CALENDAR_EVENTS(3, "noCalendarEvents"),
+    GOOD_WEATHER(4, "goodWeather"),
+    BAD_WEATHER(5, "badWeather"),
+    POI(6, "poi");
 
     public int id;
     public String title;

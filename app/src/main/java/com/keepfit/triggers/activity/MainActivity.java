@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
             TriggerService.addThread(new TimeThread(this));
             TriggerService.addThread(new CalendarThread(this));
             TriggerService.addThread(new StepCounterThread(this));
-            TriggerService.addThread(new WeatherThread(this, this));
+            TriggerService.addThread(new WeatherThread(this));
             TriggerService.addThread(new LocationThread(this, this));
             TriggerService.addThread(new PointsOfInterestThread(this, this));
             TriggerService.setContext(this);

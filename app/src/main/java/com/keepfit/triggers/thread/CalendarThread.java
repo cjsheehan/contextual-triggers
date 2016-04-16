@@ -1,6 +1,5 @@
 package com.keepfit.triggers.thread;
 
-import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -8,6 +7,7 @@ import android.provider.CalendarContract;
 import android.util.Log;
 
 import com.keepfit.triggers.utils.Broadcast;
+import com.keepfit.triggers.utils.Dates;
 import com.keepfit.triggers.utils.TriggerCache;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
 import com.keepfit.triggers.utils.enums.TriggerType;
@@ -26,78 +26,91 @@ public class CalendarThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     private static final String TAG = "CalendarThread";
     private static final String TITLE = "Calendar";
 
-    public ArrayList<KeepFitCalendarEvent> events = new ArrayList<>();
-
-    public static ArrayList<String> nameOfEvent = new ArrayList<>();
-    public static ArrayList<String> startDates = new ArrayList<>();
-    public static ArrayList<String> endDates = new ArrayList<>();
-    public static ArrayList<String> descriptions = new ArrayList<>();
+    public ArrayList<KeepFitCalendarEvent> events;
 
     public CalendarThread(Context context) {
         super(TITLE, TriggerType.CALENDAR, false, context);
     }
 
-    boolean sent = false;
-
     @Override
     public void doTriggerRunAction() {
+        if (shouldRefresh()) {
+            populateCalendarEvents();
+        }
+    }
+
+    private void populateCalendarEvents() {
+        events = new ArrayList<>();
         Calendar startDate = Calendar.getInstance();
         Calendar endDate = Calendar.getInstance();
         endDate.add(Calendar.DATE, 1);
 
-        String selection = "(( " + CalendarContract.Events.DTSTART + " >= " + startDate.getTimeInMillis() + " ) AND (" +
-                " " + CalendarContract.Events.DTSTART + " <= " + endDate.getTimeInMillis() + " ))";
+        String[] projection = new String[]{
+                CalendarContract.Events.CALENDAR_ID,
+                CalendarContract.Events.TITLE,
+                CalendarContract.Events.DESCRIPTION,
+                CalendarContract.Events.DTSTART,
+                CalendarContract.Events.DTEND,
+                CalendarContract.Events.EVENT_LOCATION};
+        String selection = String.format("((%s >= ?) AND (%s <= ?))", CalendarContract.Events.DTSTART, CalendarContract.Events.DTEND);
+        String[] selectionArgs = new String[]{String.valueOf(startDate.getTimeInMillis()), String.valueOf(endDate.getTimeInMillis())};
+        Cursor cursor = null;
+        try {
+            cursor = context.getContentResolver()
+                    .query(
+                            Uri.parse("content://com.android.calendar/events"), projection, selection, selectionArgs, null);
+            while (cursor.moveToNext()) {
+                String eventName = cursor.getString(cursor.getColumnIndexOrThrow(CalendarContract.Events.TITLE));
+                String startDt = Dates.getDate(cursor.getLong(cursor.getColumnIndexOrThrow(CalendarContract.Events.DTSTART)));
+                String endDt = Dates.getDate(cursor.getLong(cursor.getColumnIndexOrThrow(CalendarContract.Events.DTEND)));
 
-        Cursor cursor = context.getContentResolver()
-                .query(
-                        Uri.parse("content://com.android.calendar/events"),
-                        new String[]{"calendar_id", "title", "description",
-                                "dtstart", "dtend", "eventLocation"}, selection,
-                        null, null);
-        cursor.moveToFirst();
-        String CNames[] = new String[cursor.getCount()];
+                SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+                Date start = new Date();
+                Date end = new Date();
+                try {
+                    start = dateFormat.parse(startDt);
+                    end = dateFormat.parse(endDt);
+                } catch (ParseException e) {
+                    Log.e(TAG, e.getMessage(), e);
+                }
 
-        // fetching calendars id
-        nameOfEvent.clear();
-        startDates.clear();
-        endDates.clear();
-        descriptions.clear();
-        for (int i = 0; i < CNames.length; i++) {
-            String eventName = cursor.getString(1);
-            String startDt = getDate(Long.parseLong(cursor.getString(3)));
-            String endDt = getDate(Long.parseLong(cursor.getString(4)));
-            SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
-            Date start = new Date();
-            Date end = new Date();
-            try {
-                start = dateFormat.parse(startDt);
-                end = dateFormat.parse(endDt);
-            } catch (ParseException e) {
-                Log.e(TAG, e.getMessage(), e);
+                KeepFitCalendarEvent newCalendarEvent = new KeepFitCalendarEvent(eventName, start, end);
+                events.add(newCalendarEvent);
             }
+        } catch (Exception e) {
+            Log.e(TAG, "Exception when getting calendar events...", e);
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
 
-            KeepFitCalendarEvent newCalendarEvent = new KeepFitCalendarEvent(eventName, start, end);
-            events.add(newCalendarEvent);
-            cursor.moveToNext();
-        }
-        if (cursor != null)
-            cursor.close();
-        if (!sent) {
-            TriggerCache.put(TriggerType.CALENDAR, events);
-            sent = true;
-        }
+        createTestEvent();
+        TriggerCache.put(TriggerType.CALENDAR, events);
+        Broadcast.broadcastCalendarEvents(context, events);
     }
 
-    public static String getDate(long milliSeconds) {
-        SimpleDateFormat formatter = new SimpleDateFormat(
-                "dd/MM/yyyy hh:mm:ss a");
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(milliSeconds);
-        return formatter.format(calendar.getTime());
+    private void createTestEvent() {
+        Calendar startDate = Calendar.getInstance();
+        Calendar endDate = Calendar.getInstance();
+        endDate.add(Calendar.DATE, 1);
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat(Dates.DATE);
+        Date start = new Date();
+        Date end = new Date();
+        try {
+            start = dateFormat.parse(Dates.convertDate(startDate.getTime(), Dates.DATE));
+            end = dateFormat.parse(Dates.convertDate(endDate.getTime(), Dates.DATE));
+        } catch (ParseException e) {
+            Log.e(TAG, e.getMessage(), e);
+        }
+
+        KeepFitCalendarEvent event = new KeepFitCalendarEvent("Android Class Today", start, end);
+        events.add(event);
     }
 
     @Override
     public void doStartAction() {
+        populateCalendarEvents();
     }
 
     @Override
@@ -109,7 +122,7 @@ public class CalendarThread extends TriggerThread<List<KeepFitCalendarEvent>> {
     public String getTextToDisplayOnUI() {
         if (events == null || events.size() == 0)
             return "No events";
-        return String.format("%s [%s - %s]", events.get(0).getName(), events.get(0).getStart(), events.get(0).getEnd());
+        return String.format("%s [%s - %s]", events.get(0).getName(), events.get(0).getStartDate(), events.get(0).getEndDate());
     }
 
     @Override

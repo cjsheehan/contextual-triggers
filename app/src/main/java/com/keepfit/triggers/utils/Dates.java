@@ -13,6 +13,7 @@ public class Dates {
     public static String PRETTY_DATE = "dd/MM/yyyy";
     public static String NUMBER_DATE = "yyyyMMdd";
     public static String TIME = "HH:mm:ss";
+    public static String DATE = "MM/dd/yyyy HH:mm";
 
     /**
      * Get the specified date in the pretty date format (dd/MM/yyyy).
@@ -46,6 +47,12 @@ public class Dates {
     public static String getTime() {
         Date date = getDate();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(TIME);
+        return simpleDateFormat.format(date);
+    }
+
+    public static String getPrettyDateWithTime() {
+        Date date = getDate();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE);
         return simpleDateFormat.format(date);
     }
 
@@ -89,8 +96,12 @@ public class Dates {
         return d;
     }
 
+    public static String convertDate(Date date, String toFormat) {
+        SimpleDateFormat toDateFormat = new SimpleDateFormat(toFormat);
+        return toDateFormat.format(date);
+    }
 
-    public static Date getDateFromHours(String hours){
+    public static Date getDateFromHours(String hours) {
         Date date1 = null;
         SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
         try {
@@ -99,6 +110,14 @@ public class Dates {
             e.printStackTrace();
         }
         return date1;
+    }
+
+    public static String getDate(long milliSeconds) {
+        SimpleDateFormat formatter = new SimpleDateFormat(
+                "dd/MM/yyyy hh:mm:ss a");
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(milliSeconds);
+        return formatter.format(calendar.getTime());
     }
 
 }

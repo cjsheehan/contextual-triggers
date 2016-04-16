@@ -41,7 +41,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_toRightOf="@+id/txt_title"
-                android:gravity="right|center_vertical"
+                android:gravity="right"
+                android:layout_centerVertical="true"
                 android:singleLine="true"
                 android:padding="10dp"
                 android:textSize="18dp"/>

@@ -69,7 +69,7 @@ public class Notification implements Serializable {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < notifications.size(); i++) {
             Notification n = notifications.get(i);
-            stringBuilder.append(n.getMessage());
+            stringBuilder.append("* " + n.getMessage());
             if (i != notifications.size() - 1)
                 stringBuilder.append("\n");
         }

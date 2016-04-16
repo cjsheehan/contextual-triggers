@@ -1,5 +1,7 @@
 package com.keepfit.triggers.utils.enums;
 
+import com.keepfit.triggers.utils.Dates;
+
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -13,13 +15,29 @@ public class KeepFitCalendarEvent implements Serializable {
     private Date startTime;
     private Date endTime;
 
-    public KeepFitCalendarEvent(String name, Date start, Date end){
+    public KeepFitCalendarEvent(String name, Date start, Date end) {
         this.eventName = name;
         this.startTime = start;
         this.endTime = end;
     }
 
-    public String getName(){return this.eventName;}
-    public Date getStart(){return this.startTime;}
-    public Date getEnd(){return this.endTime;}
+    public String getName() {
+        return eventName;
+    }
+
+    public Date getStart() {
+        return startTime;
+    }
+
+    public Date getEnd() {
+        return endTime;
+    }
+
+    public String getStartDate() {
+        return Dates.convertDate(startTime, Dates.DATE);
+    }
+
+    public String getEndDate() {
+        return Dates.convertDate(endTime, Dates.DATE);
+    }
 }

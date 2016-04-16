@@ -2,17 +2,14 @@ package com.keepfit.triggers.thread;
 
 import android.content.Context;
 import android.location.Location;
+import android.util.Log;
 
 import com.android.volley.VolleyError;
-import com.keepfit.triggers.listener.PermissionRequestListener;
-import com.keepfit.triggers.listener.PermissionResponseListener;
 import com.keepfit.triggers.listener.ResponseListener;
-import com.keepfit.triggers.service.LocationService;
-import com.keepfit.triggers.utils.TriggerCache;
-import com.keepfit.triggers.weather.WeatherEvent;
-import com.keepfit.triggers.utils.enums.TriggerType;
-
 import com.keepfit.triggers.service.WeatherService;
+import com.keepfit.triggers.utils.TriggerCache;
+import com.keepfit.triggers.utils.enums.TriggerType;
+import com.keepfit.triggers.weather.WeatherEvent;
 
 public class WeatherThread extends TriggerThread<WeatherEvent> implements ResponseListener<WeatherEvent> {
     private static final String TAG = "WeatherThread";
@@ -23,7 +20,7 @@ public class WeatherThread extends TriggerThread<WeatherEvent> implements Respon
     private WeatherEvent weatherEvent;
     private boolean waitForLocation = false;
 
-    public WeatherThread(Context context, PermissionRequestListener listener) {
+    public WeatherThread(Context context) {
         super(TITLE, TriggerType.WEATHER, false, context);
         this.context = context;
     }
@@ -36,6 +33,10 @@ public class WeatherThread extends TriggerThread<WeatherEvent> implements Respon
                 requestWeather(location.getLatitude(), location.getLongitude());
                 waitForLocation = false;
             }
+        }
+        if (shouldRefresh()) {
+            // Need to do a request again, so setting this flag to true will be all we need to trigger that
+            waitForLocation = true;
         }
     }
 

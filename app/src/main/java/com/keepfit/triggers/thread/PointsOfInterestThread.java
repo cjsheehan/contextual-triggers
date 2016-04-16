@@ -2,6 +2,7 @@ package com.keepfit.triggers.thread;
 
 import android.content.Context;
 import android.location.Location;
+import android.util.Log;
 
 import com.android.volley.VolleyError;
 import com.keepfit.triggers.listener.PermissionRequestListener;
@@ -40,6 +41,10 @@ public class PointsOfInterestThread extends TriggerThread<Results> implements Re
                 waitForLocation = false;
             }
         }
+        if (shouldRefresh()) {
+            // Need to do a request again, so setting this flag to true will be all we need to trigger that
+            waitForLocation = true;
+        }
     }
 
     @Override
@@ -59,7 +64,7 @@ public class PointsOfInterestThread extends TriggerThread<Results> implements Re
     }
 
     public void requestPointsOfInterest(Location location) {
-        poiService.requestPointsOfInterest(location.getLatitude(), location.getLatitude());
+        poiService.requestPointsOfInterest(location.getLatitude(), location.getLongitude());
     }
 
     @Override
@@ -76,7 +81,7 @@ public class PointsOfInterestThread extends TriggerThread<Results> implements Re
 
     @Override
     public void onResponse(Results response) {
-        if(response != null) {
+        if (response != null) {
             poiEvent = response;
             TriggerCache.put(TriggerType.POI, response);
         }

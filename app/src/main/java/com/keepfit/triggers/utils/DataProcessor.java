@@ -1,6 +1,7 @@
 package com.keepfit.triggers.utils;
 
 import android.location.Location;
+import android.util.Log;
 
 import com.keepfit.triggers.interests.Item;
 import com.keepfit.triggers.utils.enums.KeepFitCalendarEvent;
@@ -15,7 +16,7 @@ import java.util.List;
  * Created by kornelkotan on 12/04/2016.
  */
 public class DataProcessor {
-
+    private static final String TAG = "DataProcessor";
 
     public static boolean isThereAnyCalendarEventInTheWay(long differenceParam, List<KeepFitCalendarEvent>
             calendarEvents) {
@@ -24,15 +25,13 @@ public class DataProcessor {
                     ());
             long endDifference = Math.abs(event.getEnd().getTime() - new Date(System.currentTimeMillis()).getTime());
             if (startDifference < differenceParam || endDifference < differenceParam) {
-                System.out.println("Annoying calendar event found: " + event.getName());
+                Log.i(TAG, "Annoying calendar event found: " + event.getName());
                 return true;
             }
         }
-        System.out.println("There are no annoying calendar events");
+        Log.i(TAG, "There are no annoying calendar events");
         return false;
     }
-
-    ;
 
     public static boolean isLaterThan(int hourOfDay, int minute) {
         Calendar today = Calendar.getInstance();
@@ -42,20 +41,39 @@ public class DataProcessor {
 
         Date currentTime = new Date(System.currentTimeMillis());
         if (currentTime.getTime() > today.getTime().getTime()) {
-            System.out.println("The current time is: " + currentTime.getTime() + " later than " + today.getTime());
+            Log.i(TAG, "The current time is: " + currentTime.getTime() + " later than " + today.getTime());
             return true;
         }
-        System.out.println("The current time is: " + currentTime.getTime() + " earlier than " + today.getTime());
+        Log.i(TAG, "The current time is: " + currentTime.getTime() + " earlier than " + today.getTime());
+        return false;
+    }
+
+    public static boolean isTimeBetween(int startHour, int startMinute, int endHour, int endMinute) {
+        Calendar todayStart = Calendar.getInstance();
+        todayStart.set(Calendar.HOUR_OF_DAY, startHour);
+        todayStart.set(Calendar.MINUTE, startMinute);
+        todayStart.set(Calendar.SECOND, 0);
+        Calendar todayEnd = Calendar.getInstance();
+        todayEnd.set(Calendar.HOUR_OF_DAY, endHour);
+        todayEnd.set(Calendar.MINUTE, endMinute);
+        todayEnd.set(Calendar.SECOND, 0);
+
+        Date currentTime = new Date(System.currentTimeMillis());
+        if (currentTime.after(todayStart.getTime()) && currentTime.before(todayEnd.getTime())) {
+            Log.i(TAG, String.format("The current time[%s] is between %s and %s", currentTime.getTime(), todayStart.getTime(), todayEnd.getTime()));
+            return true;
+        }
+        Log.i(TAG, String.format("The current time[%s] is not between %s and %s", currentTime.getTime(), todayStart.getTime(), todayEnd.getTime()));
         return false;
     }
 
     public static boolean isCompletenessLowerThan(double percentage, double completenessPercentage) {
         if (completenessPercentage < percentage) {
-            System.out.println("The dailiy step goal completeness is: " + completenessPercentage + " lower than " +
+            Log.i(TAG, "The dailiy step goal completeness is: " + completenessPercentage + " lower than " +
                     percentage);
             return true;
         }
-        System.out.println("The dailiy step goal completeness is: " + completenessPercentage + " larger than " +
+        Log.i(TAG, "The dailiy step goal completeness is: " + completenessPercentage + " larger than " +
                 percentage);
         return false;
     }
@@ -70,9 +88,8 @@ public class DataProcessor {
     }
 
     public static boolean checkPointOfInterestNearLocation(Item pointOfInterest, Location location) {
-        // TODO Double check these with the api
         double pointLat = Double.parseDouble(pointOfInterest.getPosition()[0]);
-        double pointLong = Double.parseDouble(pointOfInterest.getPosition()[0]);
+        double pointLong = Double.parseDouble(pointOfInterest.getPosition()[1]);
 
         // Create a new location for the point of interest by copying the current location
         Location pointLocation = new Location(location);

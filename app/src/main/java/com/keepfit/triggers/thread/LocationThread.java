@@ -33,7 +33,7 @@ public class LocationThread extends TriggerThread<Object> {
 
     @Override
     public void doTriggerRunAction() {
-        if (waitForLocation) {
+        if (waitForLocation || shouldRefresh()) {
             locationService.requestLocation(new PermissionResponseListener() {
                 @Override
                 protected void permissionGranted(Location location) {
