@@ -34,7 +34,7 @@ public class PointsOfInterestThread extends TriggerThread<Results> implements Re
 
     @Override
     public void doTriggerRunAction() {
-        if (waitForLocation) {
+        if (waitForLocation || poiEvent == null) {
             Location location = TriggerCache.get(TriggerType.LOCATION, Location.class);
             if (location != null) {
                 requestPointsOfInterest(location);

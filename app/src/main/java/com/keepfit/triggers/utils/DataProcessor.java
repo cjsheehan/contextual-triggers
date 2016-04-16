@@ -69,11 +69,11 @@ public class DataProcessor {
 
     public static boolean isCompletenessLowerThan(double percentage, double completenessPercentage) {
         if (completenessPercentage < percentage) {
-            Log.i(TAG, "The dailiy step goal completeness is: " + completenessPercentage + " lower than " +
+            Log.i(TAG, "The daily step goal completeness is: " + completenessPercentage + " lower than " +
                     percentage);
             return true;
         }
-        Log.i(TAG, "The dailiy step goal completeness is: " + completenessPercentage + " larger than " +
+        Log.i(TAG, "The daily step goal completeness is: " + completenessPercentage + " larger than " +
                 percentage);
         return false;
     }

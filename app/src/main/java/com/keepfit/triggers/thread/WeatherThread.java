@@ -18,7 +18,7 @@ public class WeatherThread extends TriggerThread<WeatherEvent> implements Respon
     private Context context;
     private WeatherService weatherService;
     private WeatherEvent weatherEvent;
-    private boolean waitForLocation = false;
+    private boolean waitForLocation = false, waitForConnectionPermission = true;
 
     public WeatherThread(Context context) {
         super(TITLE, TriggerType.WEATHER, false, context);
@@ -27,7 +27,7 @@ public class WeatherThread extends TriggerThread<WeatherEvent> implements Respon
 
     @Override
     public void doTriggerRunAction() {
-        if (waitForLocation) {
+        if (waitForLocation || weatherEvent == null) {
             Location location = TriggerCache.get(TriggerType.LOCATION, Location.class);
             if (location != null) {
                 requestWeather(location.getLatitude(), location.getLongitude());

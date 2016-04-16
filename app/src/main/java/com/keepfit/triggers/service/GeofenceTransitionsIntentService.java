@@ -1,6 +1,7 @@
 package com.keepfit.triggers.service;
 
 import android.app.IntentService;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.util.Log;
 
@@ -24,6 +25,12 @@ public class GeofenceTransitionsIntentService extends IntentService {
         super(TAG);
     }
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.d(TAG, "Creating Service");
+    }
+
     protected void onHandleIntent(Intent intent) {
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         if (geofencingEvent.hasError()) {
@@ -37,24 +44,11 @@ public class GeofenceTransitionsIntentService extends IntentService {
 
         List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
         // Test that the reported transition was of interest.
+        Broadcast.broadcastGeofenceEvents(this, triggeringGeofences.get(0).getRequestId());
         if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+        }
+        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
 
-
-            // Get the geofences that were triggered. A single event can trigger
-            // multiple geofences.
-//            List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
-
-//             Get the transition details as a String.
-//            String geofenceTransitionDetails = getGeofenceTransitionDetails(
-//                    this,
-//                    geofenceTransition,
-//                    triggeringGeofences
-//            );
-
-            // Send notification and log the transition details.
-//            sendNotification(geofenceTransitionDetails);
-//            TriggerCache.put(TriggerType.LOCATION, geofenceTransition);
-            Broadcast.broadcastGeofenceEvents(this, triggeringGeofences.get(0).getRequestId());
         } else {
             // Log the error.
             Log.e(TAG, "GEOFENCE ERROR...");

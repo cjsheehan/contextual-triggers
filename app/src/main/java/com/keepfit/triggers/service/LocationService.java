@@ -111,41 +111,45 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
         return new Barcode.GeoPoint(VERSION_CODE, location.getLatitude(), location.getLongitude());
     }
 
+    public void requestLocation() {
+        requestLocation(new PermissionResponseListener() {
+            @Override
+            protected void permissionGranted(Location location) {
+                connectionPermissionGranted = true;
+                requestLocation();
+            }
+
+            @Override
+            protected void permissionDenied() {
+                connectionPermissionGranted = false;
+            }
+        });
+    }
+
     public void requestLocation(PermissionResponseListener permissionResponseListener) {
         lastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 googleApiClient);
         permissionResponseListener.setLocation(lastLocation);
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager
-                .PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission
-                .ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            listener.notifyPermissionRequested(permissionResponseListener);
+        if (!connectionPermissionGranted) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                listener.notifyPermissionRequested(permissionResponseListener);
+                return;
+            } else {
+                permissionResponseListener.notifyPermissionGranted();
+            }
             return;
         } else {
             permissionResponseListener.notifyPermissionGranted();
         }
     }
 
-    @Override
-    public void onResult(Status status) {
-        Log.d(TAG, "GEOFENCES WORKED!!! " + status);
-    }
-
-    private Bundle connectionHint;
-    @Override
-    public void onConnected(Bundle connectionHint) {
-        this.connectionHint = connectionHint;
-        if (disableGeofences) return;
-        setupLocation();
-    }
-
     private boolean connectionPermissionGranted;
 
     public void setupLocation() {
         if (!connectionPermissionGranted) {
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission
-                    .ACCESS_FINE_LOCATION) != PackageManager
-                    .PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission
-                    .ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 listener.notifyPermissionRequested(new PermissionResponseListener() {
                     @Override
                     public void permissionGranted(Location location) {
@@ -162,48 +166,34 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
             } else {
                 connectionPermissionGranted = true;
             }
+        } else {
+            lastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                    googleApiClient);
+
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient,
+                    new LocationRequest().create()
+                            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                            .setInterval(GEOFENCE_LOITERING_DELAY)
+                            .setFastestInterval(GEOFENCE_LOITERING_DELAY)
+                            .setNumUpdates(1),
+                    this
+            );
+
+            GeofencingRequest request = createGeoFences();
+            if (request == null) {
+                connectionCallbacks.onConnectionSuspended(0);
+                return;
+            }
+            geofencePendingIntent = getGeofencePendingIntent();
+
+            LocationServices.GeofencingApi.addGeofences(
+                    googleApiClient,
+                    request,
+                    geofencePendingIntent
+            ).setResultCallback(this);
+
+            connectionCallbacks.onConnected(connectionHint);
         }
-        lastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                googleApiClient);
-
-        LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient,
-                new LocationRequest().create()
-                        .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                        .setInterval(GEOFENCE_LOITERING_DELAY)
-                        .setFastestInterval(GEOFENCE_LOITERING_DELAY)
-                        .setNumUpdates(1),
-                this
-        );
-
-        GeofencingRequest request = createGeoFences();
-        if (request == null) {
-            connectionCallbacks.onConnectionSuspended(0);
-            return;
-        }
-        geofencePendingIntent = getGeofencePendingIntent();
-
-        LocationServices.GeofencingApi.addGeofences(
-                googleApiClient,
-                request,
-                geofencePendingIntent
-        ).setResultCallback(this);
-
-        connectionCallbacks.onConnected(connectionHint);
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.w(TAG, "Connection suspended... " + i);
-        connectionCallbacks.onConnectionSuspended(i);
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        Log.i(TAG, "Found your location: " + location.getLatitude() + " , " + location.getLongitude());
     }
 
     private GeofencingRequest createGeoFences() {
@@ -231,7 +221,7 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
         }
 
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL);
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
         builder.addGeofences(geoFences);
         return builder.build();
     }
@@ -275,8 +265,7 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
         Intent intent = new Intent(context, GeofenceTransitionsIntentService.class);
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
         // calling addGeofences() and removeGeofences().
-        return PendingIntent.getService(context, 0, intent, PendingIntent.
-                FLAG_UPDATE_CURRENT);
+        return PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     private void createGoogleApiClient() {
@@ -289,8 +278,34 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
         }
     }
 
-    public void setPermissionRequestListener(PermissionRequestListener permissionRequestListener) {
-        listener = permissionRequestListener;
+    @Override
+    public void onResult(Status status) {
+        Log.d(TAG, "Geofense result status: " + status);
+    }
+
+    private Bundle connectionHint;
+
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        this.connectionHint = connectionHint;
+        if (disableGeofences) return;
+        setupLocation();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.w(TAG, "Connection suspended... " + i);
+        connectionCallbacks.onConnectionSuspended(i);
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.w(TAG, "Location connection failed. " + connectionResult.getErrorMessage());
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        Log.i(TAG, "Found your location: " + location.getLatitude() + " , " + location.getLongitude());
     }
 
     public Location getLocation() {
@@ -300,6 +315,10 @@ public class LocationService implements GoogleApiClient.ConnectionCallbacks, Goo
             Log.w(TAG, "Permission for locations has not been granted.");
             return null;
         }
+    }
+
+    public boolean isConnectionPermissionGranted() {
+        return connectionPermissionGranted;
     }
 
 }

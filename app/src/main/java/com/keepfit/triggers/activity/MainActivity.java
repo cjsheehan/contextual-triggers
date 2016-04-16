@@ -1,8 +1,12 @@
 package com.keepfit.triggers.activity;
 
 import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -14,6 +18,9 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.keepfit.triggers.R;
 import com.keepfit.triggers.listener.PermissionResponseListener;
 import com.keepfit.triggers.notification.Notification;
@@ -37,7 +44,6 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
     Intent serviceIntent;
     Button btnTriggers;
     boolean fromNotification;
-    PermissionResponseListener permissionResponseListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,31 +119,39 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
     public static final int LOCATION_PERMISSION_CODE = 100;
 
     @Override
-    public void notifyPermissionRequested(PermissionResponseListener permissionResponseListener) {
-        ActivityCompat.requestPermissions(this, new String[]{
-                        Manifest.permission
-                                .ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                LOCATION_PERMISSION_CODE);
-        this.permissionResponseListener = permissionResponseListener;
+    public void notifyPermissionRequested(final PermissionResponseListener permissionResponseListener) {
+        if (!ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                Manifest.permission.WRITE_CONTACTS)) {
+            final Activity activity = this;
+            showMessageOKCancel("You need to allow access to Location",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            permissionResponseListener.notifyPermissionGranted();
+                            Toast.makeText(activity, "Location permissions have been granted!", Toast.LENGTH_SHORT).show();
+                        }
+                    }, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            permissionResponseListener.notifyPermissionDenied();
+                            Toast.makeText(activity, "You have chosen to disable Location. The following triggers will not work: Weather - Location - Points of Interest", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+            return;
+        }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        switch (requestCode) {
-            case LOCATION_PERMISSION_CODE:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Permission Granted
-                    permissionResponseListener.notifyPermissionGranted();
-                } else {
-                    // Permission Denied
-                    Toast.makeText(MainActivity.this, "Location Access Denied", Toast.LENGTH_SHORT)
-                            .show();
-                    permissionResponseListener.notifyPermissionDenied();
-                }
-                break;
-            default:
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
+    }
+
+    private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener, DialogInterface.OnClickListener cancelListener) {
+        new AlertDialog.Builder(MainActivity.this)
+                .setMessage(message)
+                .setPositiveButton("OK", okListener)
+                .setNegativeButton("Cancel", cancelListener)
+                .create()
+                .show();
     }
 
     @Override
@@ -182,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements PermissionRequest
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-       if (id == R.id.action_settings) {
+        if (id == R.id.action_settings) {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;

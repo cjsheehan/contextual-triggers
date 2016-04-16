@@ -12,12 +12,10 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.google.android.gms.location.Geofence;
 import com.keepfit.triggers.interests.Item;
 import com.keepfit.triggers.interests.Results;
 import com.keepfit.triggers.notification.Notification;
 import com.keepfit.triggers.thread.BaseThread;
-import com.keepfit.triggers.thread.CalendarThread;
 import com.keepfit.triggers.thread.TriggerThread;
 import com.keepfit.triggers.utils.Broadcast;
 import com.keepfit.triggers.utils.DataProcessor;
@@ -30,9 +28,7 @@ import com.keepfit.triggers.weather.Forecast;
 import com.keepfit.triggers.weather.WeatherEvent;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.prefs.Preferences;
 
 /**
  * Created by Edward on 4/8/2016.
@@ -438,9 +434,8 @@ public class TriggerService extends Service {
         if (!DataProcessor.isThereAnyCalendarEventInTheWay(twoHours, calendarEvents)) {
             if (!DataProcessor.isTheWeatherBad(weatherEvent)) {
                 if (DataProcessor.isLaterThan(11, 0)) {
-                    Notification.sendNotification(context, "You should go out!", "It's early, You don't have any " +
-                            "calendar events and the weather is good :" + weatherEvent.getCurrentForecast()
-                            .getSummary(), Scenario.NO_CALENDAR_EVENTS);
+                    Notification.sendNotification(context, "You should go out!", "It's early, You don't have any calendar events and the weather is" +
+                            " good :" + weatherEvent.getCurrentForecast().getSummary(), Scenario.NO_CALENDAR_EVENTS);
                 }
             }
         }

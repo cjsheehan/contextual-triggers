@@ -23,8 +23,7 @@ public class LocationThread extends TriggerThread<Object> {
     private static final String TITLE = "Location";
 
     private LocationService locationService;
-    private Location lastLocation;
-    private boolean waitForSetup = false, waitForLocation = false;
+    private boolean waitForSetup = false, waitForLocation = false, waitForConnectionPermission = true;
 
     public LocationThread(Context context, PermissionRequestListener listener) {
         super(TITLE, TriggerType.LOCATION, false, context);
@@ -33,12 +32,12 @@ public class LocationThread extends TriggerThread<Object> {
 
     @Override
     public void doTriggerRunAction() {
-        if (waitForLocation || shouldRefresh()) {
+        Log.d(TAG, "Wait for Connection: " + waitForConnectionPermission + " wait for location: " + waitForLocation);
+        if (!waitForConnectionPermission && (waitForLocation || shouldRefresh())) {
             locationService.requestLocation(new PermissionResponseListener() {
                 @Override
                 protected void permissionGranted(Location location) {
                     if (location == null) return;
-                    lastLocation = location;
                     Broadcast.broadcastLocationReceived(context, location);
                     TriggerCache.put(TriggerType.LOCATION, locationService.getLocation());
                     waitForLocation = false;
@@ -53,6 +52,11 @@ public class LocationThread extends TriggerThread<Object> {
         if (waitForSetup) {
             locationService.setupLocation();
         }
+        if (waitForConnectionPermission) {
+            if (locationService.isConnectionPermissionGranted()) {
+                waitForConnectionPermission = false;
+            }
+        }
     }
 
     @Override
@@ -60,7 +64,10 @@ public class LocationThread extends TriggerThread<Object> {
         locationService.connect(new GoogleApiClient.ConnectionCallbacks() {
             @Override
             public void onConnected(Bundle bundle) {
-                waitForLocation = true;
+                if (locationService.isConnectionPermissionGranted())
+                    waitForLocation = true;
+                else
+                    waitForConnectionPermission = true;
             }
 
             @Override
@@ -69,6 +76,17 @@ public class LocationThread extends TriggerThread<Object> {
                         "enable and define at least one location.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    public void pauseThread(boolean pause) {
+        super.pauseThread(pause);
+        if (!pause) {
+            // Check again if location should be requested on unpause
+            if (!locationService.isConnectionPermissionGranted()) {
+                locationService.setupLocation();
+            }
+        }
     }
 
     public Barcode.GeoPoint getLocationFromAddress(String address) {
@@ -83,14 +101,6 @@ public class LocationThread extends TriggerThread<Object> {
         locationService.requestLocation(listener);
     }
 
-    public void updateLocation() {
-        waitForLocation = true;
-    }
-
-    public boolean hasLocation() {
-        return !waitForLocation;
-    }
-
     @Override
     public void doStopAction() {
         locationService.disconnect();
@@ -103,6 +113,7 @@ public class LocationThread extends TriggerThread<Object> {
 
     @Override
     protected String getTextToDisplayOnUI() {
+        Location lastLocation = locationService.getLocation();
         return lastLocation == null ? "No location" : String.format("Lat[%s] - Long[%s]", lastLocation.getLatitude(),
                 lastLocation.getLongitude());
     }
