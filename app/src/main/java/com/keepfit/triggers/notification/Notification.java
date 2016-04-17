@@ -73,7 +73,7 @@ public class Notification implements Serializable {
             if (i != notifications.size() - 1)
                 stringBuilder.append("\n");
         }
-        bigTextStyle.setBigContentTitle(notifications.size() == 1 ? notification.getTitle() : "Trigger Scenarios");
+        bigTextStyle.setBigContentTitle(notifications.size() == 1 ? notification.getTitle() : "The context has changed around you");
         bigTextStyle.bigText(stringBuilder.toString());
         bigTextStyle.setSummaryText("You have hit some triggers!");
         builder.setStyle(bigTextStyle);
@@ -89,7 +89,7 @@ public class Notification implements Serializable {
     }
 
     public static void sendNotification(final Context context, String title, String message, Scenario scenario) {
-        sendNotification(context, title, message, scenario, R.drawable.ic_sentiment_very_satisfied_black_24dp);
+        sendNotification(context, title, message, scenario, R.drawable.fitnessiconpngfitnessicon);
     }
 
     public String getTitle() {

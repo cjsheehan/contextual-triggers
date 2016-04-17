@@ -454,7 +454,7 @@ public class TriggerService extends Service {
         }
         if (DataProcessor.isLaterThan(17, 0)) {
             if (DataProcessor.isCompletenessLowerThan(70.0, stepCounterPercentage)) {
-                Notification.sendNotification(context, "MOVE!", String.format("The day is almost over and your step " +
+                Notification.sendNotification(context, "You haven't completed your daily goal!", String.format("The day is almost over and your step " +
                         "goal of %s is not completed [%s%%].", (int) goal, stepCounterPercentage.intValue()), Scenario.STEP_PERCENTAGE);
                 notificationSent = true;
             }
